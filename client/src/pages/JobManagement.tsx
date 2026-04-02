@@ -3,26 +3,26 @@ const JobManagement = () => {
     <div className="min-h-screen flex flex-col">
       {/* TopNavBar  */}
       <header className="w-full top-0 sticky z-50 bg-[#f7f9fb] dark:bg-slate-900">
-        <div className="flex justify-between items-center px-12 py-6 max-w-[1440px] mx-auto">
+        <div className="flex justify-between items-center px-12 py-6 max-w-360 mx-auto">
           <div className="flex items-center gap-12">
             <span className="text-xl font-bold text-slate-900 dark:text-slate-50 tracking-tight">
               JobNest
             </span>
             <nav className="hidden md:flex items-center gap-8 font-manrope text-sm font-medium tracking-tight">
               <a
-                className="text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-white transition-colors duration-200 ease-in-out"
+                className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors duration-200 ease-in-out"
                 href="#"
               >
                 Find Jobs
               </a>
               <a
-                className="dark:text-white duration-200 ease-in-out text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-white transition-colors"
+                className="dark:text-white duration-200 ease-in-out text-secondary hover:text-primary dark:hover:text-white transition-colors"
                 href="#"
               >
                 Companies
               </a>
               <a
-                className="text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-white transition-colors duration-200 ease-in-out"
+                className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors duration-200 ease-in-out"
                 href="#"
               >
                 About
@@ -30,7 +30,7 @@ const JobManagement = () => {
             </nav>
           </div>
           <div className="flex items-center gap-6">
-            <button className="material-symbols-outlined text-[#446279] dark:text-slate-400 hover:text-[#001939] transition-colors">
+            <button className="material-symbols-outlined text-secondary dark:text-slate-400 hover:text-primary transition-colors">
               notifications
             </button>
             <div className="w-10 h-10 rounded-full bg-surface-container overflow-hidden">
@@ -44,7 +44,7 @@ const JobManagement = () => {
         </div>
       </header>
       {/* Main Content  */}
-      <main className="flex-grow w-full max-w-[1440px] mx-auto px-12 py-12">
+      <main className="grow w-full max-w-360 mx-auto px-12 py-12">
         {/* Header Section  */}
         <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
           <div>
@@ -341,32 +341,32 @@ const JobManagement = () => {
         </div>
       </main>
       {/* Footer  */}
-      <footer className="w-full mt-auto bg-[#f2f4f6] dark:bg-slate-950">
-        <div className="flex flex-col md:flex-row justify-between items-center px-12 py-10 w-full max-w-[1440px] mx-auto">
-          <span className="font-manrope text-[0.75rem] uppercase tracking-widest text-[#446279] dark:text-slate-500 mb-6 md:mb-0 opacity-80">
+      <footer className="w-full mt-auto bg-surface-container-low dark:bg-slate-950">
+        <div className="flex flex-col md:flex-row justify-between items-center px-12 py-10 w-full max-w-360 mx-auto">
+          <span className="font-manrope text-[0.75rem] uppercase tracking-widest text-secondary dark:text-slate-500 mb-6 md:mb-0 opacity-80">
             © 2024 JobNest. All rights reserved.
           </span>
           <div className="flex flex-wrap justify-center gap-8">
             <a
-              className="font-manrope text-[0.75rem] uppercase tracking-widest text-[#446279] dark:text-slate-500 hover:text-[#001939] dark:hover:text-slate-200 transition-opacity opacity-80 hover:opacity-100"
+              className="font-manrope text-[0.75rem] uppercase tracking-widest text-secondary dark:text-slate-500 hover:text-primary dark:hover:text-slate-200 transition-opacity opacity-80 hover:opacity-100"
               href="#"
             >
               Privacy Policy
             </a>
             <a
-              className="font-manrope text-[0.75rem] uppercase tracking-widest text-[#446279] dark:text-slate-500 hover:text-[#001939] dark:hover:text-slate-200 transition-opacity opacity-80 hover:opacity-100"
+              className="font-manrope text-[0.75rem] uppercase tracking-widest text-secondary dark:text-slate-500 hover:text-primary dark:hover:text-slate-200 transition-opacity opacity-80 hover:opacity-100"
               href="#"
             >
               Terms of Service
             </a>
             <a
-              className="font-manrope text-[0.75rem] uppercase tracking-widest text-[#446279] dark:text-slate-500 hover:text-[#001939] dark:hover:text-slate-200 transition-opacity opacity-80 hover:opacity-100"
+              className="font-manrope text-[0.75rem] uppercase tracking-widest text-secondary dark:text-slate-500 hover:text-primary dark:hover:text-slate-200 transition-opacity opacity-80 hover:opacity-100"
               href="#"
             >
               Support
             </a>
             <a
-              className="font-manrope text-[0.75rem] uppercase tracking-widest text-[#446279] dark:text-slate-500 hover:text-[#001939] dark:hover:text-slate-200 transition-opacity opacity-80 hover:opacity-100"
+              className="font-manrope text-[0.75rem] uppercase tracking-widest text-secondary dark:text-slate-500 hover:text-primary dark:hover:text-slate-200 transition-opacity opacity-80 hover:opacity-100"
               href="#"
             >
               Contact Us

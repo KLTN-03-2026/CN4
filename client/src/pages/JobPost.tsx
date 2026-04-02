@@ -5,24 +5,24 @@ const JobPost = () => {
       <header className="bg-[#f7f9fb] dark:bg-slate-900 font-manrope antialiased tracking-tight docked full-width top-0 z-50">
         <nav className="flex justify-between items-center w-full px-8 py-4 max-w-7xl mx-auto">
           <div className="flex items-center gap-8">
-            <span className="text-2xl font-black text-[#001939] dark:text-blue-50 tracking-tighter">
+            <span className="text-2xl font-black text-primary dark:text-blue-50 tracking-tighter">
               JobNest
             </span>
             <div className="hidden md:flex items-center gap-6">
               <a
-                className="text-[#446279] dark:text-slate-400 font-medium hover:text-[#001939] dark:hover:text-blue-200 transition-colors"
+                className="text-secondary dark:text-slate-400 font-medium hover:text-primary dark:hover:text-blue-200 transition-colors"
                 href="#"
               >
                 Find Jobs
               </a>
               <a
-                className="text-[#446279] dark:text-slate-400 font-medium hover:text-[#001939] dark:hover:text-blue-200 transition-colors"
+                className="text-secondary dark:text-slate-400 font-medium hover:text-primary dark:hover:text-blue-200 transition-colors"
                 href="#"
               >
                 Companies
               </a>
               <a
-                className="text-[#446279] dark:text-slate-400 font-medium hover:text-[#001939] dark:hover:text-blue-200 transition-colors"
+                className="text-secondary dark:text-slate-400 font-medium hover:text-primary dark:hover:text-blue-200 transition-colors"
                 href="#"
               >
                 About
@@ -30,7 +30,7 @@ const JobPost = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <button className="p-2 text-[#001939] dark:text-blue-100 hover:bg-[#f2f4f6] dark:hover:bg-slate-800 rounded-lg transition-all active:scale-95">
+            <button className="p-2 text-primary dark:text-blue-100 hover:bg-surface-container-low dark:hover:bg-slate-800 rounded-lg transition-all active:scale-95">
               <span
                 className="material-symbols-outlined"
                 data-icon="notifications"
@@ -320,26 +320,26 @@ const JobPost = () => {
         </div>
       </main>
       {/* Footer  */}
-      <footer className="bg-[#f7f9fb] dark:bg-slate-950 font-manrope text-sm tracking-wide full-width border-t border-[#c3c6d0]/15 dark:border-slate-800">
+      <footer className="bg-[#f7f9fb] dark:bg-slate-950 font-manrope text-sm tracking-wide full-width border-t border-outline-variant/15 dark:border-slate-800">
         <div className="flex flex-col md:flex-row justify-between items-center w-full px-12 py-8 gap-4 max-w-7xl mx-auto">
-          <span className="text-[#446279] dark:text-slate-500">
+          <span className="text-secondary dark:text-slate-500">
             © 2024 JobNest. Curating the future of work.
           </span>
           <div className="flex gap-8">
             <a
-              className="text-[#446279] dark:text-slate-500 uppercase tracking-widest text-[10px] hover:text-[#001939] dark:hover:text-blue-400 underline underline-offset-4 transition-opacity"
+              className="text-secondary dark:text-slate-500 uppercase tracking-widest text-[10px] hover:text-primary dark:hover:text-blue-400 underline underline-offset-4 transition-opacity"
               href="#"
             >
               Privacy Policy
             </a>
             <a
-              className="text-[#446279] dark:text-slate-500 uppercase tracking-widest text-[10px] hover:text-[#001939] dark:hover:text-blue-400 underline underline-offset-4 transition-opacity"
+              className="text-secondary dark:text-slate-500 uppercase tracking-widest text-[10px] hover:text-primary dark:hover:text-blue-400 underline underline-offset-4 transition-opacity"
               href="#"
             >
               Terms of Service
             </a>
             <a
-              className="text-[#446279] dark:text-slate-500 uppercase tracking-widest text-[10px] hover:text-[#001939] dark:hover:text-blue-400 underline underline-offset-4 transition-opacity"
+              className="text-secondary dark:text-slate-500 uppercase tracking-widest text-[10px] hover:text-primary dark:hover:text-blue-400 underline underline-offset-4 transition-opacity"
               href="#"
             >
               Support

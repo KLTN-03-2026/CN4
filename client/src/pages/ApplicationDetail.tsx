@@ -3,32 +3,32 @@ const ApplicationDetail = () => {
     <body className="bg-background text-on-surface antialiased min-h-screen">
       {/* TopNavBar from Shared Components  */}
       <header className="w-full top-0 sticky z-50 bg-[#f7f9fb] dark:bg-slate-900">
-        <div className="flex justify-between items-center px-12 py-6 max-w-[1440px] mx-auto">
+        <div className="flex justify-between items-center px-12 py-6 max-w-360 mx-auto">
           <div className="flex items-center gap-12">
             <span className="text-xl font-bold text-slate-900 dark:text-slate-50 tracking-tight">
               JobNest
             </span>
             <nav className="hidden md:flex items-center gap-8 font-manrope text-sm font-medium tracking-tight">
               <a
-                className="text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-white transition-colors duration-200 ease-in-out"
+                className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors duration-200 ease-in-out"
                 href="#"
               >
                 Find Jobs
               </a>
               <a
-                className="text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-white transition-colors duration-200 ease-in-out"
+                className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors duration-200 ease-in-out"
                 href="#"
               >
                 Jobs
               </a>
               <a
-                className="text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-white transition-colors duration-200 ease-in-out"
+                className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors duration-200 ease-in-out"
                 href="#"
               >
                 Companies
               </a>
               <a
-                className="text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-white transition-colors duration-200 ease-in-out"
+                className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors duration-200 ease-in-out"
                 href="#"
               >
                 About
@@ -36,7 +36,7 @@ const ApplicationDetail = () => {
             </nav>
           </div>
           <div className="flex items-center gap-6">
-            <button className="material-symbols-outlined text-[#446279] dark:text-slate-400 hover:text-[#001939] transition-colors">
+            <button className="material-symbols-outlined text-secondary dark:text-slate-400 hover:text-primary transition-colors">
               notifications
             </button>
             <div className="w-10 h-10 rounded-full bg-surface-container overflow-hidden">
@@ -49,7 +49,7 @@ const ApplicationDetail = () => {
           </div>
         </div>
       </header>
-      <main className="pb-20 px-8 max-w-[1400px] mx-auto pt-12">
+      <main className="pb-20 px-8 max-w-350 mx-auto pt-12">
         {/* Header Section  */}
         <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
@@ -279,7 +279,7 @@ const ApplicationDetail = () => {
       </main>
       {/* Footer from Shared Components  */}
       <footer className="w-full py-12 px-8 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 max-w-[1400px] mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 max-w-350 mx-auto">
           <p className="text-xs font-manrope uppercase tracking-widest text-slate-600 dark:text-slate-400">
             © 2024 The Digital Curator. All rights reserved.
           </p>

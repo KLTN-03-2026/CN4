@@ -37,7 +37,7 @@ const CandidateApplications = () => {
               notifications
             </button>
             <div className="relative group flex items-center gap-3 pl-4 border-l border-outline-variant/20 cursor-pointer">
-              <div className="text-right hidden sm:block flex flex-col justify-center">
+              <div className="text-right sm:block flex flex-col justify-center">
                 <p className="text-sm font-semibold text-primary">
                   Alex Rivera
                 </p>
@@ -48,7 +48,7 @@ const CandidateApplications = () => {
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuChT0d4U1sSZhgSmej6Xzmuo5F_viH1EVqXLX6fMFpo38yLqNmKtbTS2ns9KElNnTE_S611XmfQ8gIWDLxabg_Ku1nGPXdGgKLAndA_2n9hiAeylSqAccivqFnTzD5teXSQQQJLSVQB_fpBVN1NDjn40Ygrw6F2V5mzUyCOnHKqs2Mbxq1jcXNYWOXNRJWX9P4tj75s5Ra-dsrsv_Fq9v2CXW38eKWZkzbN9k_NZTsqSdhDuml-kag0HuMsVI4vPmEl38C9vuQp59M"
               />
               {/* Dropdown Menu  */}
-              <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[60]">
+              <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-60">
                 <a
                   className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-[#002D5E] hover:bg-slate-50 transition-colors"
                   href="#"

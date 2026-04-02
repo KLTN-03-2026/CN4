@@ -1,4 +1,6 @@
+import JobManagement from "./pages/JobManagement";
+
 const App = () => {
-  return <div>Hello world</div>;
+  return <JobManagement />;
 };
 export default App;

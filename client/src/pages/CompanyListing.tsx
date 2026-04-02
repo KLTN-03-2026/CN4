@@ -19,13 +19,13 @@ const CompanyListing = () => {
                 Find Jobs
               </a>
               <a
-                className="text-[#001939] dark:text-white font-semibold border-b-2 border-[#001939] dark:border-blue-400 pb-1 transition-all"
+                className="text-primary dark:text-white font-semibold border-b-2 border-primary dark:border-blue-400 pb-1 transition-all"
                 href="#"
               >
                 Companies
               </a>
               <a
-                className="text-[#446279] dark:text-slate-400 font-medium hover:text-[#001939] dark:hover:text-blue-200 transition-colors"
+                className="text-secondary dark:text-slate-400 font-medium hover:text-primary dark:hover:text-blue-200 transition-colors"
                 href="#"
               >
                 About
@@ -36,27 +36,27 @@ const CompanyListing = () => {
             <button className="px-5 py-2.5 text-sm font-semibold text-primary dark:text-blue-100 border border-primary dark:border-blue-400 rounded-lg hover:bg-primary/5 transition-all duration-200">
               Find Candidates
             </button>
-            <button className="px-5 py-2.5 text-sm font-medium text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-blue-200 transition-colors">
+            <button className="px-5 py-2.5 text-sm font-medium text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-200 transition-colors">
               Login
             </button>
-            <button className="px-6 py-2.5 text-sm font-bold bg-[#001939] text-white rounded-lg hover:opacity-80 active:scale-95 transition-all duration-200">
+            <button className="px-6 py-2.5 text-sm font-bold bg-primary text-white rounded-lg hover:opacity-80 active:scale-95 transition-all duration-200">
               Sign Up
             </button>
           </div>
         </div>
-        <div className="bg-[#f2f4f6] dark:bg-slate-800/50 h-[1px] w-full"></div>
+        <div className="bg-surface-container-low dark:bg-slate-800/50 h-px w-full"></div>
       </header>
-      <main className="w-full max-w-[1440px] mx-auto px-12 py-12 flex-grow">
+      <main className="w-full max-w-360 mx-auto px-12 py-12 grow">
         {/* Hero / Horizontal Search Section (Mirrored from SCREEN_160)  */}
         <section className="mb-20">
           <div className="max-w-4xl">
-            <h1 className="text-[#001939] font-headline font-extrabold text-6xl tracking-tight mb-10 leading-[1.1]">
+            <h1 className="text-primary font-headline font-extrabold text-6xl tracking-tight mb-10 leading-[1.1]">
               Discover leading{" "}
               <span className="text-surface-tint">companies</span>.
             </h1>
           </div>
           <div className="bg-white shadow-xl shadow-slate-200/50 p-2 rounded-2xl flex flex-row items-center gap-2 border border-slate-100">
-            <div className="flex-grow relative flex items-center border-r border-slate-100">
+            <div className="grow relative flex items-center border-r border-slate-100">
               <span className="material-symbols-outlined absolute left-6 text-secondary">
                 search
               </span>
@@ -95,7 +95,7 @@ const CompanyListing = () => {
             <span className="text-sm font-medium text-secondary">
               Showing 6 of 42 results
             </span>
-            <div className="h-8 w-[1px] bg-outline-variant/30"></div>
+            <div className="h-8 w-px bg-outline-variant/30"></div>
             <button className="flex items-center gap-2 text-sm font-bold text-primary hover:text-surface-tint transition-colors">
               Filter{" "}
               <span className="material-symbols-outlined text-lg">tune</span>
@@ -116,7 +116,7 @@ const CompanyListing = () => {
                 />
               </div>
               {/* Info  */}
-              <div className="flex-grow">
+              <div className="grow">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-bold text-primary mb-1">
@@ -131,7 +131,7 @@ const CompanyListing = () => {
                       </span>
                     </div>
                   </div>
-                  <span className="text-lg font-bold text-[#002d5e]">
+                  <span className="text-lg font-bold text-primary-container">
                     12 Open Roles
                   </span>
                 </div>
@@ -164,7 +164,7 @@ const CompanyListing = () => {
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuABC3yzrUtMR3UbE-0OZXqWnA97I3xBSlBpI0-EnKBrn1NoOYJknUymyM8nUkEMwzynIdvG_c240valpsc6PBA68ARwb5uqYonVL9mqcy4SgCfWgHqfZiW3yn6G3jxxigYBImgUsjDCSZY1dhxEpGcvFTRWi3gA43s2SbSajCjWWMwpSJqHpHn1p1iZ44aHguKxgBecz8fVyYCfdaCgoPFBtgxtaLQDSE6B_v-PuS1Cee6vWHB07YCX1vihlNxz7AMsNC3PTstP6Dg"
                 />
               </div>
-              <div className="flex-grow">
+              <div className="grow">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-bold text-primary mb-1">
@@ -179,7 +179,7 @@ const CompanyListing = () => {
                       </span>
                     </div>
                   </div>
-                  <span className="text-lg font-bold text-[#002d5e]">
+                  <span className="text-lg font-bold text-primary-container">
                     8 Open Roles
                   </span>
                 </div>
@@ -211,7 +211,7 @@ const CompanyListing = () => {
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuBm7cnz1Rq3IeQf7DGuRAHywSSvFZUQv_wHsM4OxZVEo-fSNLpA0XV65Ti3Q9c3wqRTmOiYww3i5LQZRpoZ1mGwrX0-WSvaJzAseeAkv26jeV0kxOxJit-2XxWckTyBk2FjiZHMizd2m69-p_5N88G9hNkjAhVH2TS1XaZ-kzpscB9I7yzYl2fXeWK5UOfOW_RYtbf0N35kbxVq6SvlmwznPqzqTembEZ7qyzRhoUl_jTL_cCZzDW3XADvRuFbnkjJLAxxTxFmzfz0"
                 />
               </div>
-              <div className="flex-grow">
+              <div className="grow">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-bold text-primary mb-1">
@@ -226,7 +226,7 @@ const CompanyListing = () => {
                       </span>
                     </div>
                   </div>
-                  <span className="text-lg font-bold text-[#002d5e]">
+                  <span className="text-lg font-bold text-primary-container">
                     24 Open Roles
                   </span>
                 </div>
@@ -258,7 +258,7 @@ const CompanyListing = () => {
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiz6Xw5qSl1LpAsaU5TF77a-ZSu6dip9DlbqfNgiyRyANd-wckpGw8Y132ZuQvYrAff6UCyF7JM9-LmXkWP0iy37rypJa4L7mZ7UsD7NNKB2zSg9x3Eqp4kQuijpg9rAPhybHN9F9amzfUIO8wjNQxroyDp_sA2jXCQ7AOE1qU8jAuq7xjVVj9INeXmANP845hupUJZBB5csBnd2icKcd7vrtxBJIEd0SzpCpWqEovZzDfM3Pab53R-xVBc4-bPkH4zKwt_sQmcNY"
                 />
               </div>
-              <div className="flex-grow">
+              <div className="grow">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-bold text-primary mb-1">
@@ -273,7 +273,7 @@ const CompanyListing = () => {
                       </span>
                     </div>
                   </div>
-                  <span className="text-lg font-bold text-[#002d5e]">
+                  <span className="text-lg font-bold text-primary-container">
                     5 Open Roles
                   </span>
                 </div>
@@ -305,7 +305,7 @@ const CompanyListing = () => {
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuAstb9NlyBh-R9x9LFsNtefZag2aJmFGXcg10lsQlhbSsBe9o1xwCwn6sK-lL9ivRXQP20jUnrClxKCNAk-9BfgWgwL408iTNWM7bspjVR69ppRRmTyW0Awrt2n3QskH-18R9Kbz5q6rOlPFquaYYeNLMAAyOobectWd5_26LcFrrZKcFEnkeOz349KTGbCKIpgI1-6plYyskNeM_c_6HSEsX0lNJlKC9vwj3HJbY3QrS0RFGLqiNK_1sIm6eBJk8-2pBtt_XEIjlo"
                 />
               </div>
-              <div className="flex-grow">
+              <div className="grow">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-bold text-primary mb-1">
@@ -320,7 +320,7 @@ const CompanyListing = () => {
                       </span>
                     </div>
                   </div>
-                  <span className="text-lg font-bold text-[#002d5e]">
+                  <span className="text-lg font-bold text-primary-container">
                     31 Open Roles
                   </span>
                 </div>
@@ -352,7 +352,7 @@ const CompanyListing = () => {
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9KE6X6mT4WlMQB_eVqh-PvpUb6kNY7fvoBNmPmYUFs3rueaAj4rY-wnhnhrFlj-wPGLpp0s22tZyMzIHJO6g568eAicSQX5ba5q61rYQgNxYYMPfwCQTKAqTpCBUDMNUmPXniqg21H2nZNRA3oSPw6sfTk80u8oUiC6ETK0ezAsx1DHc-wZ2o3MHyO_k7d8m6xyC6iZTmw4wAYMjmXWO8rL8f0YFnugxZQrQ13Uley0w4rVDFe_UFZOUS1QPGZW47s64SqcQtCeQ"
                 />
               </div>
-              <div className="flex-grow">
+              <div className="grow">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-bold text-primary mb-1">
@@ -367,7 +367,7 @@ const CompanyListing = () => {
                       </span>
                     </div>
                   </div>
-                  <span className="text-lg font-bold text-[#002d5e]">
+                  <span className="text-lg font-bold text-primary-container">
                     14 Open Roles
                   </span>
                 </div>
@@ -418,65 +418,65 @@ const CompanyListing = () => {
         </div>
       </main>
       {/* Footer Component (Mirrored from SCREEN_160)  */}
-      <footer className="bg-[#f7f9fb] dark:bg-slate-950 w-full mt-24 border-t border-[#c3c6d0]/15">
-        <div className="max-w-[1440px] mx-auto px-12 py-12 flex flex-col gap-12">
+      <footer className="bg-[#f7f9fb] dark:bg-slate-950 w-full mt-24 border-t border-outline-variant/15">
+        <div className="max-w-360 mx-auto px-12 py-12 flex flex-col gap-12">
           <div className="flex flex-row justify-between items-start">
             <div className="flex flex-col gap-4">
-              <span className="text-2xl font-bold tracking-tighter text-[#001939] dark:text-white">
+              <span className="text-2xl font-bold tracking-tighter text-primary dark:text-white">
                 JobNest
               </span>
-              <p className="font-manrope text-sm text-[#446279] dark:text-slate-400 max-w-xs">
+              <p className="font-manrope text-sm text-secondary dark:text-slate-400 max-w-xs">
                 Curating the future of professional work with intelligence and
                 serenity.
               </p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-16">
               <div className="flex flex-col gap-4">
-                <span className="font-bold text-[#001939] dark:text-white text-sm uppercase tracking-widest">
+                <span className="font-bold text-primary dark:text-white text-sm uppercase tracking-widest">
                   Platform
                 </span>
                 <a
-                  className="text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-blue-300 transition-colors text-sm"
+                  className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 transition-colors text-sm"
                   href="#"
                 >
                   Find Jobs
                 </a>
                 <a
-                  className="text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-blue-300 transition-colors text-sm"
+                  className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 transition-colors text-sm"
                   href="#"
                 >
                   Companies
                 </a>
               </div>
               <div className="flex flex-col gap-4">
-                <span className="font-bold text-[#001939] dark:text-white text-sm uppercase tracking-widest">
+                <span className="font-bold text-primary dark:text-white text-sm uppercase tracking-widest">
                   Employers
                 </span>
                 <a
-                  className="text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-blue-300 transition-colors text-sm"
+                  className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 transition-colors text-sm"
                   href="#"
                 >
                   Post a Job
                 </a>
                 <a
-                  className="text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-blue-300 transition-colors text-sm"
+                  className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 transition-colors text-sm"
                   href="#"
                 >
                   Hiring Solutions
                 </a>
               </div>
               <div className="flex flex-col gap-4">
-                <span className="font-bold text-[#001939] dark:text-white text-sm uppercase tracking-widest">
+                <span className="font-bold text-primary dark:text-white text-sm uppercase tracking-widest">
                   Legal
                 </span>
                 <a
-                  className="text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-blue-300 transition-colors text-sm"
+                  className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 transition-colors text-sm"
                   href="#"
                 >
                   Privacy Policy
                 </a>
                 <a
-                  className="text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-blue-300 transition-colors text-sm"
+                  className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 transition-colors text-sm"
                   href="#"
                 >
                   Terms of Service
@@ -485,18 +485,18 @@ const CompanyListing = () => {
             </div>
           </div>
           <div className="flex flex-row justify-between items-center pt-10 border-t border-slate-200/50 dark:border-slate-800/50 font-manrope text-sm tracking-wide uppercase">
-            <p className="text-[#446279] dark:text-slate-400">
+            <p className="text-secondary dark:text-slate-400">
               © 2024 JobNest Curator. All rights reserved.
             </p>
             <div className="flex gap-8">
               <a
-                className="text-[#446279] dark:text-slate-500 hover:text-[#001939] dark:hover:text-white transition-all duration-300"
+                className="text-secondary dark:text-slate-500 hover:text-primary dark:hover:text-white transition-all duration-300"
                 href="#"
               >
                 Cookie Settings
               </a>
               <a
-                className="text-[#446279] dark:text-slate-500 hover:text-[#001939] dark:hover:text-white transition-all duration-300"
+                className="text-secondary dark:text-slate-500 hover:text-primary dark:hover:text-white transition-all duration-300"
                 href="#"
               >
                 Help Center

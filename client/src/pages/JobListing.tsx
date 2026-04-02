@@ -3,29 +3,29 @@ const JobListing = () => {
     <div className="bg-surface selection:bg-primary-fixed selection:text-primary min-h-screen flex flex-col">
       {/* TopNavBar Component  */}
       <header className="bg-[#f7f9fb] dark:bg-slate-900 sticky top-0 z-50 w-full">
-        <div className="flex justify-between items-center px-12 py-6 max-w-[1440px] mx-auto">
+        <div className="flex justify-between items-center px-12 py-6 max-w-360 mx-auto">
           <div className="flex items-center gap-12">
             <a
-              className="text-2xl font-bold tracking-tighter text-[#001939] dark:text-white"
+              className="text-2xl font-bold tracking-tighter text-primary dark:text-white"
               href="#"
             >
               JobNest
             </a>
             <nav className="hidden lg:flex items-center gap-8 font-manrope text-base tracking-tight">
               <a
-                className="text-[#001939] dark:text-white font-semibold border-b-2 border-[#001939] dark:border-blue-400 pb-1 transition-all"
+                className="text-primary dark:text-white font-semibold border-b-2 border-primary dark:border-blue-400 pb-1 transition-all"
                 href="#"
               >
                 Find Jobs
               </a>
               <a
-                className="text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-white transition-colors font-medium"
+                className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-400 transition-colors font-medium"
                 href="#"
               >
                 Companies
               </a>
               <a
-                className="text-[#446279] dark:text-slate-400 font-medium hover:text-[#001939] dark:hover:text-blue-200 transition-colors"
+                className="text-secondary dark:text-slate-400 font-medium hover:text-primary dark:hover:text-blue-200 transition-colors"
                 href="#"
               >
                 About
@@ -36,27 +36,27 @@ const JobListing = () => {
             <button className="px-5 py-2.5 text-sm font-semibold text-primary dark:text-blue-100 border border-primary dark:border-blue-400 rounded-lg hover:bg-primary/5 transition-all duration-200">
               Find Candidates
             </button>
-            <button className="px-5 py-2.5 text-sm font-medium text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-blue-200 transition-colors">
+            <button className="px-5 py-2.5 text-sm font-medium text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-200 transition-colors">
               Login
             </button>
-            <button className="px-6 py-2.5 text-sm font-bold bg-[#001939] text-white rounded-lg hover:opacity-80 active:scale-95 transition-all duration-200">
+            <button className="px-6 py-2.5 text-sm font-bold bg-primary text-on-primary rounded-lg hover:opacity-80 active:scale-95 transition-all duration-200">
               Sign Up
             </button>
           </div>
         </div>
-        <div className="bg-[#f2f4f6] dark:bg-slate-800/50 h-[1px] w-full"></div>
+        <div className="bg-surface-container-low dark:bg-slate-800/50 h-px w-full"></div>
       </header>
-      <main className="w-full max-w-[1440px] mx-auto px-12 py-12 flex-grow">
+      <main className="w-full max-w-360 mx-auto px-12 py-12 grow">
         {/* Hero / Horizontal Search Section  */}
         <section className="mb-20">
           <div className="max-w-4xl">
-            <h1 className="text-[#001939] font-headline font-extrabold text-6xl tracking-tight mb-10 leading-[1.1]">
+            <h1 className="text-primary font-headline font-extrabold text-6xl tracking-tight mb-10 leading-[1.1]">
               Discover your{" "}
               <span className="text-surface-tint">next chapter</span>.
             </h1>
           </div>
           <div className="bg-white shadow-xl shadow-slate-200/50 p-2 rounded-2xl flex flex-row items-center gap-2 border border-slate-100">
-            <div className="flex-grow relative flex items-center border-r border-slate-100">
+            <div className="grow relative flex items-center border-r border-slate-100">
               <span className="material-symbols-outlined absolute left-6 text-secondary">
                 search
               </span>
@@ -95,7 +95,7 @@ const JobListing = () => {
             <span className="text-sm font-medium text-secondary">
               Showing 7 of 124 results
             </span>
-            <div className="h-8 w-[1px] bg-outline-variant/30"></div>
+            <div className="h-8 w-px bg-outline-variant/30"></div>
             <button className="flex items-center gap-2 text-sm font-bold text-primary hover:text-surface-tint transition-colors">
               Filter{" "}
               <span className="material-symbols-outlined text-lg">tune</span>
@@ -112,17 +112,17 @@ const JobListing = () => {
                 <span className="text-3xl font-extrabold text-blue-900">S</span>
               </div>
               {/* Job Info  */}
-              <div className="flex-grow">
+              <div className="grow">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-bold text-primary mb-1">
                       Senior Product Designer (Lead)
                     </h3>
-                    <p className="text-[#446279] text-sm font-bold uppercase tracking-wide mb-3">
+                    <p className="text-secondary text-sm font-bold uppercase tracking-wide mb-3">
                       Stellar Systems Co., Ltd
                     </p>
                   </div>
-                  <span className="text-lg font-bold text-[#002d5e]">
+                  <span className="text-lg font-bold text-primary">
                     Up to $150k/year
                   </span>
                 </div>
@@ -161,17 +161,17 @@ const JobListing = () => {
                   A
                 </span>
               </div>
-              <div className="flex-grow">
+              <div className="grow">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-bold text-primary mb-1">
                       Software Engineer (Node.js)
                     </h3>
-                    <p className="text-[#446279] text-sm font-bold uppercase tracking-wide mb-3">
+                    <p className="text-secondary text-sm font-bold uppercase tracking-wide mb-3">
                       Apex Global Tech Labs
                     </p>
                   </div>
-                  <span className="text-lg font-bold text-[#002d5e]">
+                  <span className="text-lg font-bold text-primary-container">
                     Up to $180k/year
                   </span>
                 </div>
@@ -209,17 +209,17 @@ const JobListing = () => {
                   M
                 </span>
               </div>
-              <div className="flex-grow">
+              <div className="grow">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-bold text-primary mb-1">
                       Marketing Manager (Senior)
                     </h3>
-                    <p className="text-[#446279] text-sm font-bold uppercase tracking-wide mb-3">
+                    <p className="text-secondary text-sm font-bold uppercase tracking-wide mb-3">
                       Moxy Media Group
                     </p>
                   </div>
-                  <span className="text-lg font-bold text-[#002d5e]">
+                  <span className="text-lg font-bold text-primary-container">
                     Up to $125k/year
                   </span>
                 </div>
@@ -257,17 +257,17 @@ const JobListing = () => {
                   V
                 </span>
               </div>
-              <div className="flex-grow">
+              <div className="grow">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-bold text-primary mb-1">
                       Visual Brand Lead
                     </h3>
-                    <p className="text-[#446279] text-sm font-bold uppercase tracking-wide mb-3">
+                    <p className="text-secondary text-sm font-bold uppercase tracking-wide mb-3">
                       Velvet Design Studio
                     </p>
                   </div>
-                  <span className="text-lg font-bold text-[#002d5e]">
+                  <span className="text-lg font-bold text-primary-container">
                     Up to $140k/year
                   </span>
                 </div>
@@ -305,17 +305,17 @@ const JobListing = () => {
                   G
                 </span>
               </div>
-              <div className="flex-grow">
+              <div className="grow">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-bold text-primary mb-1">
                       Senior Growth Analyst
                     </h3>
-                    <p className="text-[#446279] text-sm font-bold uppercase tracking-wide mb-3">
+                    <p className="text-secondary text-sm font-bold uppercase tracking-wide mb-3">
                       Growthify Platforms Inc
                     </p>
                   </div>
-                  <span className="text-lg font-bold text-[#002d5e]">
+                  <span className="text-lg font-bold text-primary-container">
                     Up to $110k/year
                   </span>
                 </div>
@@ -353,17 +353,17 @@ const JobListing = () => {
                   N
                 </span>
               </div>
-              <div className="flex-grow">
+              <div className="grow">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-bold text-primary mb-1">
                       Lead UX Researcher
                     </h3>
-                    <p className="text-[#446279] text-sm font-bold uppercase tracking-wide mb-3">
+                    <p className="text-secondary text-sm font-bold uppercase tracking-wide mb-3">
                       Nexus Design Systems
                     </p>
                   </div>
-                  <span className="text-lg font-bold text-[#002d5e]">
+                  <span className="text-lg font-bold text-primary-container">
                     Up to $130k/year
                   </span>
                 </div>
@@ -399,17 +399,17 @@ const JobListing = () => {
               <div className="h-24 w-24 rounded-xl border border-slate-100 bg-white flex items-center justify-center shrink-0 shadow-sm overflow-hidden p-2">
                 <span className="text-3xl font-extrabold text-red-900">D</span>
               </div>
-              <div className="flex-grow">
+              <div className="grow">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-bold text-primary mb-1">
                       DevOps Engineer (Cloud)
                     </h3>
-                    <p className="text-[#446279] text-sm font-bold uppercase tracking-wide mb-3">
+                    <p className="text-secondary text-sm font-bold uppercase tracking-wide mb-3">
                       DataCore Infrastructure
                     </p>
                   </div>
-                  <span className="text-lg font-bold text-[#002d5e]">
+                  <span className="text-lg font-bold text-primary-container">
                     Up to $165k/year
                   </span>
                 </div>
@@ -468,65 +468,65 @@ const JobListing = () => {
         </div>
       </main>
       {/* Footer Component  */}
-      <footer className="bg-[#f7f9fb] dark:bg-slate-950 w-full mt-24 border-t border-[#c3c6d0]/15">
-        <div className="max-w-[1440px] mx-auto px-12 py-12 flex flex-col gap-12">
+      <footer className="bg-[#f7f9fb] dark:bg-slate-950 w-full mt-24 border-t border-outline-variant/15">
+        <div className="max-w-360 mx-auto px-12 py-12 flex flex-col gap-12">
           <div className="flex flex-row justify-between items-start">
             <div className="flex flex-col gap-4">
-              <span className="text-2xl font-bold tracking-tighter text-[#001939] dark:text-white">
+              <span className="text-2xl font-bold tracking-tighter text-primary dark:text-white">
                 JobNest
               </span>
-              <p className="font-manrope text-sm text-[#446279] dark:text-slate-400 max-w-xs">
+              <p className="font-manrope text-sm text-secondary dark:text-slate-400 max-w-xs">
                 Curating the future of professional work with intelligence and
                 serenity.
               </p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-16">
               <div className="flex flex-col gap-4">
-                <span className="font-bold text-[#001939] dark:text-white text-sm uppercase tracking-widest">
+                <span className="font-bold text-primary dark:text-white text-sm uppercase tracking-widest">
                   Platform
                 </span>
                 <a
-                  className="text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-blue-300 transition-colors text-sm"
+                  className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 transition-colors text-sm"
                   href="#"
                 >
                   Find Jobs
                 </a>
                 <a
-                  className="text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-blue-300 transition-colors text-sm"
+                  className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 transition-colors text-sm"
                   href="#"
                 >
                   Companies
                 </a>
               </div>
               <div className="flex flex-col gap-4">
-                <span className="font-bold text-[#001939] dark:text-white text-sm uppercase tracking-widest">
+                <span className="font-bold text-primary dark:text-white text-sm uppercase tracking-widest">
                   Employers
                 </span>
                 <a
-                  className="text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-blue-300 transition-colors text-sm"
+                  className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 transition-colors text-sm"
                   href="#"
                 >
                   Post a Job
                 </a>
                 <a
-                  className="text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-blue-300 transition-colors text-sm"
+                  className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 transition-colors text-sm"
                   href="#"
                 >
                   Hiring Solutions
                 </a>
               </div>
               <div className="flex flex-col gap-4">
-                <span className="font-bold text-[#001939] dark:text-white text-sm uppercase tracking-widest">
+                <span className="font-bold text-primary dark:text-white text-sm uppercase tracking-widest">
                   Legal
                 </span>
                 <a
-                  className="text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-blue-300 transition-colors text-sm"
+                  className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 transition-colors text-sm"
                   href="#"
                 >
                   Privacy Policy
                 </a>
                 <a
-                  className="text-[#446279] dark:text-slate-400 hover:text-[#001939] dark:hover:text-blue-300 transition-colors text-sm"
+                  className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 transition-colors text-sm"
                   href="#"
                 >
                   Terms of Service
@@ -535,18 +535,18 @@ const JobListing = () => {
             </div>
           </div>
           <div className="flex flex-row justify-between items-center pt-10 border-t border-slate-200/50 dark:border-slate-800/50 font-manrope text-sm tracking-wide uppercase">
-            <p className="text-[#446279] dark:text-slate-400">
+            <p className="text-secondary dark:text-slate-400">
               © 2024 JobNest Curator. All rights reserved.
             </p>
             <div className="flex gap-8">
               <a
-                className="text-[#446279] dark:text-slate-500 hover:text-[#001939] dark:hover:text-white transition-all duration-300"
+                className="text-secondary dark:text-slate-500 hover:text-primary dark:hover:text-white transition-all duration-300"
                 href="#"
               >
                 Cookie Settings
               </a>
               <a
-                className="text-[#446279] dark:text-slate-500 hover:text-[#001939] dark:hover:text-white transition-all duration-300"
+                className="text-secondary dark:text-slate-500 hover:text-primary dark:hover:text-white transition-all duration-300"
                 href="#"
               >
                 Help Center

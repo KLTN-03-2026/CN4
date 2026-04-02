@@ -43,11 +43,11 @@ const JobApply = () => {
         </main>
       </div>
       {/* Modal Overlay  */}
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 md:p-8">
+      <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 md:p-8">
         {/* Dimmed Backdrop  */}
         <div className="absolute inset-0 bg-primary/40 backdrop-blur-md"></div>
         {/* Application Modal  */}
-        <div className="relative w-full max-w-2xl bg-surface-container-lowest rounded-xl shadow-[0_40px_60px_-5px_rgba(25,28,30,0.15)] overflow-hidden flex flex-col max-h-[921px]">
+        <div className="relative w-full max-w-2xl bg-surface-container-lowest rounded-xl shadow-[0_40px_60px_-5px_rgba(25,28,30,0.15)] overflow-hidden flex flex-col max-h-230.25">
           {/* Modal Header  */}
           <div className="px-8 pt-10 pb-6 flex justify-between items-start">
             <div>
@@ -66,7 +66,7 @@ const JobApply = () => {
             </button>
           </div>
           {/* Scrollable Content  */}
-          <div className="px-8 pb-10 overflow-y-auto custom-scrollbar flex-grow">
+          <div className="px-8 pb-10 overflow-y-auto custom-scrollbar grow">
             <form className="space-y-8">
               {/* Personal Info Section  */}
               <section className="space-y-6">
@@ -200,7 +200,7 @@ const JobApply = () => {
         </div>
       </div>
       {/* Bottom Navigation Shell (Consistent with Shared Components)  */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 bg-slate-50/80 backdrop-blur-xl border-t border-slate-200/10 z-[110]">
+      <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 bg-slate-50/80 backdrop-blur-xl border-t border-slate-200/10 z-110">
         <div className="flex flex-col items-center justify-center text-slate-900 scale-110">
           <span
             className="material-symbols-outlined"
