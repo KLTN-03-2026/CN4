@@ -1,51 +1,11 @@
+import Footer from "../layouts/Footer";
+import Navbar from "../layouts/Navbar";
+
 const JobDetail = () => {
   return (
     <div className="bg-surface font-body text-on-surface">
-      {/* TopNavBar Component - Updated to match SCREEN_45 style  */}
-      <header className="bg-[#f7f9fb] dark:bg-slate-900 sticky top-0 z-50 w-full">
-        <div className="flex justify-between items-center px-12 py-6 max-w-360 mx-auto">
-          <div className="flex items-center gap-12">
-            <a
-              className="text-2xl font-bold tracking-tighter text-primary dark:text-white"
-              href="#"
-            >
-              JobNest
-            </a>
-            <nav className="hidden lg:flex items-center gap-8 font-manrope text-base tracking-tight">
-              <a
-                className="text-primary dark:text-white font-semibold border-b-2 border-primary dark:border-blue-400 pb-1 transition-all"
-                href="#"
-              >
-                Find Jobs
-              </a>
-              <a
-                className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors font-medium"
-                href="#"
-              >
-                Companies
-              </a>
-              <a
-                className="text-secondary dark:text-slate-400 font-medium hover:text-primary dark:hover:text-blue-200 transition-colors"
-                href="#"
-              >
-                About
-              </a>
-            </nav>
-          </div>
-          <div className="flex items-center gap-4">
-            <button className="px-5 py-2.5 text-sm font-semibold text-primary dark:text-blue-100 border border-primary dark:border-blue-400 rounded-lg hover:bg-primary/5 transition-all duration-200">
-              Find Candidates
-            </button>
-            <button className="px-5 py-2.5 text-sm font-medium text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-200 transition-colors">
-              Login
-            </button>
-            <button className="px-6 py-2.5 text-sm font-bold bg-primary text-white rounded-lg hover:opacity-80 active:scale-95 transition-all duration-200">
-              Sign Up
-            </button>
-          </div>
-        </div>
-        <div className="bg-surface-container-low dark:bg-slate-800/50 h-px w-full"></div>
-      </header>
+      <Navbar />
+
       <main className="max-w-7xl mx-auto py-12 md:py-20 px-8">
         {/* Hero Header  */}
         <header className="mb-16 max-w-4xl">
@@ -327,53 +287,8 @@ const JobDetail = () => {
           </aside>
         </div>
       </main>
-      {/* Footer Component - Updated to match Job Listings screen  */}
-      <footer className="bg-[#f7f9fb] border-t border-outline-variant/15 mt-20">
-        <div className="max-w-360 mx-auto px-12 py-16">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
-            <div>
-              <div className="text-2xl font-bold text-primary mb-4">
-                JobNest
-              </div>
-              <p className="text-secondary text-sm max-w-sm">
-                © 2024 JobNest. Curated with Serene Intelligence.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-x-8 gap-y-4">
-              <a
-                className="text-secondary text-sm font-medium hover:text-primary transition-colors"
-                href="#"
-              >
-                Privacy Policy
-              </a>
-              <a
-                className="text-secondary text-sm font-medium hover:text-primary transition-colors"
-                href="#"
-              >
-                Terms of Service
-              </a>
-              <a
-                className="text-secondary text-sm font-medium hover:text-primary transition-colors"
-                href="#"
-              >
-                Cookie Settings
-              </a>
-              <a
-                className="text-secondary text-sm font-medium hover:text-primary transition-colors"
-                href="#"
-              >
-                Accessibility
-              </a>
-              <a
-                className="text-secondary text-sm font-medium hover:text-primary transition-colors"
-                href="#"
-              >
-                Help Center
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
+
+      <Footer />
     </div>
   );
 };
