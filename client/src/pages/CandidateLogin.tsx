@@ -15,16 +15,19 @@ const CandidateLogin = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        "http://localhost:3000/api/auth/candidate-login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
         },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
+      );
 
       const data = await response.json();
 
@@ -36,6 +39,7 @@ const CandidateLogin = () => {
       // Store token/user info in localStorage
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("token", data.user.user_id);
+      localStorage.removeItem("company");
 
       setEmail("");
       setPassword("");

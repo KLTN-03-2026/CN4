@@ -2,6 +2,9 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import crypto from "crypto";
 
+const ROLE_CANDIDATE = 1;
+const ROLE_RECRUITER = 2;
+
 // Hash password function
 function hashPassword(password: string): string {
   return crypto.createHash("sha256").update(password).digest("hex");
@@ -177,7 +180,12 @@ export const recruiterSignup = async (req: Request, res: Response) => {
 };
 
 // Login controller
-export const login = async (req: Request, res: Response) => {
+const loginByRole = async (
+  req: Request,
+  res: Response,
+  expectedRoleId: number,
+  roleLabel: string,
+) => {
   try {
     // Ensure connection is established
     await prisma.$connect();
@@ -210,9 +218,16 @@ export const login = async (req: Request, res: Response) => {
       return;
     }
 
+    if (user.role_id !== expectedRoleId) {
+      res.status(403).json({
+        message: "Invalid email or password",
+      });
+      return;
+    }
+
     // If recruiter, also fetch their company
     let company = null;
-    if (user.role_id === 2) {
+    if (user.role_id === ROLE_RECRUITER) {
       company = await prisma.company.findFirst({
         where: { user_id: user.user_id },
       });
@@ -236,4 +251,14 @@ export const login = async (req: Request, res: Response) => {
       .status(500)
       .json({ message: "Internal server error", error: errorMessage });
   }
+};
+
+// Candidate Login controller
+export const candidateLogin = async (req: Request, res: Response) => {
+  await loginByRole(req, res, ROLE_CANDIDATE, "candidate");
+};
+
+// Recruiter Login controller
+export const recruiterLogin = async (req: Request, res: Response) => {
+  await loginByRole(req, res, ROLE_RECRUITER, "recruiter");
 };

@@ -9,12 +9,31 @@ type StoredUser = {
   };
 };
 
+type StoredCompany = {
+  name?: string;
+};
+
 const Navbar = () => {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<StoredUser | null>(null);
+  const [currentCompany, setCurrentCompany] = useState<StoredCompany | null>(
+    null,
+  );
 
   useEffect(() => {
     const rawUser = localStorage.getItem("user");
+    const rawCompany = localStorage.getItem("company");
+
+    if (rawCompany) {
+      try {
+        setCurrentCompany(JSON.parse(rawCompany));
+      } catch {
+        setCurrentCompany(null);
+      }
+    } else {
+      setCurrentCompany(null);
+    }
+
     if (!rawUser) {
       setCurrentUser(null);
       return;
@@ -32,12 +51,17 @@ const Navbar = () => {
     currentUser?.role?.title?.toLowerCase() === "recruiter";
 
   const isLoggedIn = Boolean(currentUser?.email);
+  const displayIdentity =
+    isRecruiter && currentCompany?.name
+      ? currentCompany.name
+      : currentUser?.email;
 
   const clearAuthSession = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     localStorage.removeItem("company");
     setCurrentUser(null);
+    setCurrentCompany(null);
   };
 
   const handleLogout = () => {
@@ -95,7 +119,7 @@ const Navbar = () => {
           {isLoggedIn ? (
             <div className="flex items-center gap-3">
               <div className="px-4 py-2 rounded-lg bg-surface-container-low border border-outline-variant/20 text-sm font-semibold text-primary">
-                {currentUser?.email}
+                {displayIdentity}
               </div>
               <button
                 className="px-5 py-2.5 text-sm font-semibold text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-all duration-200"
