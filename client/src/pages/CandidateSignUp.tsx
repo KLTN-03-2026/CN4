@@ -16,18 +16,20 @@ const CandidateSignup = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3000/api/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        "http://localhost:3000/api/auth/candidate-signup",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            password,
+            confirmPassword,
+          }),
         },
-        body: JSON.stringify({
-          email,
-          password,
-          confirmPassword,
-          roleId: 1, // Candidate role
-        }),
-      });
+      );
 
       const data = await response.json();
 
