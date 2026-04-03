@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const RecruiterSignUp = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -48,7 +50,7 @@ const RecruiterSignUp = () => {
       setCompanyLocation("");
       setTimeout(() => {
         // Redirect to login or recruiter dashboard
-        window.location.href = "/recruiter-login";
+        navigate("/recruiter-login");
       }, 2000);
     } catch (err) {
       setError("An error occurred. Please try again.");
