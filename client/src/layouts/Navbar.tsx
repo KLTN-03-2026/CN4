@@ -19,6 +19,7 @@ const Navbar = () => {
   const [currentCompany, setCurrentCompany] = useState<StoredCompany | null>(
     null,
   );
+  const [isRecruiterMenuOpen, setIsRecruiterMenuOpen] = useState(false);
 
   useEffect(() => {
     const rawUser = localStorage.getItem("user");
@@ -62,6 +63,7 @@ const Navbar = () => {
     localStorage.removeItem("company");
     setCurrentUser(null);
     setCurrentCompany(null);
+    setIsRecruiterMenuOpen(false);
   };
 
   const handleLogout = () => {
@@ -73,6 +75,11 @@ const Navbar = () => {
     // Ensure switching to recruiter flow always starts from a clean session.
     clearAuthSession();
     navigate("/recruiter-login");
+  };
+
+  const handleRecruiterMenuNavigate = (path: string) => {
+    setIsRecruiterMenuOpen(false);
+    navigate(path);
   };
 
   return (
@@ -118,9 +125,52 @@ const Navbar = () => {
 
           {isLoggedIn ? (
             <div className="flex items-center gap-3">
-              <div className="px-4 py-2 rounded-lg bg-surface-container-low border border-outline-variant/20 text-sm font-semibold text-primary">
-                {displayIdentity}
-              </div>
+              {isRecruiter ? (
+                <div className="relative">
+                  <button
+                    className="px-4 py-2 rounded-lg bg-surface-container-low border border-outline-variant/20 text-sm font-semibold text-primary flex items-center gap-2"
+                    onClick={() => setIsRecruiterMenuOpen((prev) => !prev)}
+                  >
+                    <span>{displayIdentity}</span>
+                    <span className="material-symbols-outlined text-base">
+                      arrow_drop_down
+                    </span>
+                  </button>
+
+                  {isRecruiterMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white border border-outline-variant/20 rounded-xl shadow-lg z-50 py-2">
+                      <button
+                        className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors"
+                        onClick={() =>
+                          handleRecruiterMenuNavigate("/company-profile")
+                        }
+                      >
+                        Company Profile
+                      </button>
+                      <button
+                        className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors"
+                        onClick={() =>
+                          handleRecruiterMenuNavigate("/job-management")
+                        }
+                      >
+                        Job Management
+                      </button>
+                      <button
+                        className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors"
+                        onClick={() =>
+                          handleRecruiterMenuNavigate("/application-management")
+                        }
+                      >
+                        Applicant Management
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="px-4 py-2 rounded-lg bg-surface-container-low border border-outline-variant/20 text-sm font-semibold text-primary">
+                  {displayIdentity}
+                </div>
+              )}
               <button
                 className="px-5 py-2.5 text-sm font-semibold text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-all duration-200"
                 onClick={handleLogout}
