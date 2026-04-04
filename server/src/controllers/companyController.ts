@@ -24,6 +24,18 @@ function parseCategoryId(rawCategoryId: unknown): number | null {
   return categoryId;
 }
 
+function parseCityId(rawCityId: unknown): number | null {
+  if (rawCityId === null) {
+    return null;
+  }
+
+  const cityId = Number(rawCityId);
+  if (!Number.isInteger(cityId) || cityId <= 0) {
+    return null;
+  }
+  return cityId;
+}
+
 export const getCategories = async (_req: Request, res: Response) => {
   try {
     await prisma.$connect();
@@ -39,6 +51,29 @@ export const getCategories = async (_req: Request, res: Response) => {
     res.status(200).json({ categories });
   } catch (error) {
     console.error("Get categories error:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: errorMessage });
+  }
+};
+
+export const getCities = async (_req: Request, res: Response) => {
+  try {
+    await prisma.$connect();
+
+    const cities = await prisma.city.findMany({
+      orderBy: { name: "asc" },
+      select: {
+        city_id: true,
+        name: true,
+      },
+    });
+
+    res.status(200).json({ cities });
+  } catch (error) {
+    console.error("Get cities error:", error);
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
     res
@@ -69,7 +104,7 @@ export const getCompanyProfile = async (req: Request, res: Response) => {
 
     const company = await prisma.company.findFirst({
       where: { user_id: userId },
-      include: { category: true },
+      include: { category: true, city: true },
     });
 
     if (!company) {
@@ -117,7 +152,7 @@ export const updateCompanyProfile = async (req: Request, res: Response) => {
       return;
     }
 
-    const { name, location, website, description, category_id } = req.body;
+    const { name, website, description, category_id, city_id } = req.body;
 
     if (typeof name === "string" && !name.trim()) {
       res.status(400).json({ message: "Company name cannot be empty" });
@@ -142,11 +177,28 @@ export const updateCompanyProfile = async (req: Request, res: Response) => {
       }
     }
 
+    if (city_id !== undefined && city_id !== null) {
+      const parsedCityId = parseCityId(city_id);
+
+      if (!parsedCityId) {
+        res.status(400).json({ message: "Invalid city" });
+        return;
+      }
+
+      const existingCity = await prisma.city.findUnique({
+        where: { city_id: parsedCityId },
+      });
+
+      if (!existingCity) {
+        res.status(400).json({ message: "Selected city does not exist" });
+        return;
+      }
+    }
+
     const updatedCompany = await prisma.company.update({
       where: { company_id: existingCompany.company_id },
       data: {
         ...(typeof name === "string" ? { name: name.trim() } : {}),
-        ...(typeof location === "string" ? { location: location.trim() } : {}),
         ...(typeof website === "string" ? { website: website.trim() } : {}),
         ...(typeof description === "string"
           ? { description: description.trim() }
@@ -154,8 +206,9 @@ export const updateCompanyProfile = async (req: Request, res: Response) => {
         ...(category_id !== undefined
           ? { category_id: parseCategoryId(category_id) }
           : {}),
+        ...(city_id !== undefined ? { city_id: parseCityId(city_id) } : {}),
       },
-      include: { category: true },
+      include: { category: true, city: true },
     });
 
     res.status(200).json({

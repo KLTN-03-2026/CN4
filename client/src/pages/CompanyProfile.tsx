@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Footer from "../layouts/Footer";
 import Navbar from "../layouts/Navbar";
@@ -14,7 +14,7 @@ type StoredUser = {
 type CompanyProfileData = {
   name: string;
   category_id: number | null;
-  location: string;
+  city_id: number | null;
   website: string;
   description: string;
 };
@@ -24,10 +24,15 @@ type CategoryOption = {
   title: string;
 };
 
+type CityOption = {
+  city_id: number;
+  name: string;
+};
+
 type EditableSection =
   | "name"
   | "industry"
-  | "location"
+  | "city"
   | "website"
   | "description"
   | null;
@@ -35,13 +40,22 @@ type EditableSection =
 const emptyProfile: CompanyProfileData = {
   name: "",
   category_id: null,
-  location: "",
+  city_id: null,
   website: "",
   description: "",
 };
 
+const fieldContainerClass =
+  "space-y-2 relative cursor-pointer section-editable pb-4 transition-all";
+
+const fieldContainerActiveClass = "";
+
+const fieldInputClass =
+  "w-full bg-surface-container-lowest border border-outline-variant/15 rounded-xl px-4 py-3 outline-none transition-all focus:border-primary";
+
 const CompanyProfile = () => {
   const navigate = useNavigate();
+  const formContainerRef = useRef<HTMLDivElement | null>(null);
   const [profile, setProfile] = useState<CompanyProfileData>(emptyProfile);
   const [draftProfile, setDraftProfile] =
     useState<CompanyProfileData>(emptyProfile);
@@ -51,6 +65,7 @@ const CompanyProfile = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [cities, setCities] = useState<CityOption[]>([]);
 
   const rawUser = useMemo(() => localStorage.getItem("user"), []);
 
@@ -82,13 +97,16 @@ const CompanyProfile = () => {
       setError("");
 
       try {
-        const [profileResponse, categoriesResponse] = await Promise.all([
-          fetch(`http://localhost:3000/api/company-profile/${userId}`),
-          fetch("http://localhost:3000/api/company-profile/categories"),
-        ]);
+        const [profileResponse, categoriesResponse, citiesResponse] =
+          await Promise.all([
+            fetch(`http://localhost:3000/api/company-profile/${userId}`),
+            fetch("http://localhost:3000/api/company-profile/categories"),
+            fetch("http://localhost:3000/api/company-profile/cities"),
+          ]);
 
         const data = await profileResponse.json();
         const categoriesData = await categoriesResponse.json();
+        const citiesData = await citiesResponse.json();
 
         if (!profileResponse.ok) {
           setError(data.message || "Failed to load company profile");
@@ -99,10 +117,14 @@ const CompanyProfile = () => {
           setCategories(categoriesData.categories || []);
         }
 
+        if (citiesResponse.ok) {
+          setCities(citiesData.cities || []);
+        }
+
         const normalizedProfile = {
           name: data.company?.name ?? "",
           category_id: data.company?.category_id ?? null,
-          location: data.company?.location ?? "",
+          city_id: data.company?.city_id ?? null,
           website: data.company?.website ?? "",
           description: data.company?.description ?? "",
         };
@@ -126,6 +148,27 @@ const CompanyProfile = () => {
 
     fetchCompanyProfile();
   }, [isRecruiter, navigate, userId]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!editingSection) {
+        return;
+      }
+
+      const targetNode = event.target as Node;
+      if (
+        formContainerRef.current &&
+        !formContainerRef.current.contains(targetNode)
+      ) {
+        setEditingSection(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [editingSection]);
 
   const handleSectionClick = (section: EditableSection) => {
     setSuccess("");
@@ -173,7 +216,7 @@ const CompanyProfile = () => {
       const updatedProfile = {
         name: data.company?.name ?? "",
         category_id: data.company?.category_id ?? null,
-        location: data.company?.location ?? "",
+        city_id: data.company?.city_id ?? null,
         website: data.company?.website ?? "",
         description: data.company?.description ?? "",
       };
@@ -229,7 +272,10 @@ const CompanyProfile = () => {
             </p>
           </div>
 
-          <div className="bg-surface-container-lowest rounded-xl p-8 md:p-12 shadow-[0_40px_60px_-5px_rgba(25,28,30,0.06)] border border-outline-variant/15">
+          <div
+            ref={formContainerRef}
+            className="bg-surface-container-lowest rounded-xl p-8 md:p-12 shadow-[0_40px_60px_-5px_rgba(25,28,30,0.06)] border border-outline-variant/15"
+          >
             <form className="space-y-10" onSubmit={handleSaveProfile}>
               {error && (
                 <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-xl text-sm">
@@ -244,7 +290,9 @@ const CompanyProfile = () => {
               )}
 
               <div
-                className="space-y-2 relative cursor-pointer section-editable pb-4 border-b border-outline-variant/10"
+                className={`${fieldContainerClass} ${
+                  editingSection === "name" ? fieldContainerActiveClass : ""
+                }`}
                 onClick={() => handleSectionClick("name")}
               >
                 <div className="flex justify-between items-start">
@@ -257,7 +305,7 @@ const CompanyProfile = () => {
                 </div>
                 {editingSection === "name" ? (
                   <input
-                    className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-fixed outline-none"
+                    className={fieldInputClass}
                     value={draftProfile.name}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) =>
@@ -276,7 +324,9 @@ const CompanyProfile = () => {
               </div>
 
               <div
-                className="space-y-2 relative cursor-pointer section-editable pb-4 border-b border-outline-variant/10"
+                className={`${fieldContainerClass} ${
+                  editingSection === "industry" ? fieldContainerActiveClass : ""
+                }`}
                 onClick={() => handleSectionClick("industry")}
               >
                 <div className="flex justify-between items-start">
@@ -289,7 +339,7 @@ const CompanyProfile = () => {
                 </div>
                 {editingSection === "industry" ? (
                   <select
-                    className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-fixed outline-none"
+                    className={fieldInputClass}
                     value={draftProfile.category_id ?? ""}
                     onChange={(e) =>
                       setDraftProfile((prev) => ({
@@ -323,39 +373,52 @@ const CompanyProfile = () => {
               </div>
 
               <div
-                className="space-y-2 relative cursor-pointer section-editable pb-4 border-b border-outline-variant/10"
-                onClick={() => handleSectionClick("location")}
+                className={`${fieldContainerClass} ${
+                  editingSection === "city" ? fieldContainerActiveClass : ""
+                }`}
+                onClick={() => handleSectionClick("city")}
               >
                 <div className="flex justify-between items-start">
                   <label className="block font-label text-xs font-bold uppercase tracking-widest text-slate-500">
-                    Company Location
+                    Company City
                   </label>
                   <span className="material-symbols-outlined text-slate-400 text-lg">
                     edit
                   </span>
                 </div>
-                {editingSection === "location" ? (
-                  <input
-                    className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-fixed outline-none"
-                    value={draftProfile.location}
-                    onClick={(e) => e.stopPropagation()}
+                {editingSection === "city" ? (
+                  <select
+                    className={fieldInputClass}
+                    value={draftProfile.city_id ?? ""}
                     onChange={(e) =>
                       setDraftProfile((prev) => ({
                         ...prev,
-                        location: e.target.value,
+                        city_id: e.target.value ? Number(e.target.value) : null,
                       }))
                     }
+                    onClick={(e) => e.stopPropagation()}
                     autoFocus
-                  />
+                  >
+                    <option value="">Select city</option>
+                    {cities.map((city) => (
+                      <option key={city.city_id} value={city.city_id}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
                 ) : (
                   <p className="text-on-surface">
-                    {draftProfile.location || "Click to add location"}
+                    {cities.find(
+                      (city) => city.city_id === draftProfile.city_id,
+                    )?.name || "Click to select city"}
                   </p>
                 )}
               </div>
 
               <div
-                className="space-y-2 relative cursor-pointer section-editable pb-4 border-b border-outline-variant/10"
+                className={`${fieldContainerClass} ${
+                  editingSection === "website" ? fieldContainerActiveClass : ""
+                }`}
                 onClick={() => handleSectionClick("website")}
               >
                 <div className="flex justify-between items-start">
@@ -368,7 +431,7 @@ const CompanyProfile = () => {
                 </div>
                 {editingSection === "website" ? (
                   <input
-                    className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-fixed outline-none"
+                    className={fieldInputClass}
                     value={draftProfile.website}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) =>
@@ -387,7 +450,11 @@ const CompanyProfile = () => {
               </div>
 
               <div
-                className="space-y-2 relative cursor-pointer section-editable"
+                className={`${fieldContainerClass} ${
+                  editingSection === "description"
+                    ? fieldContainerActiveClass
+                    : ""
+                }`}
                 onClick={() => handleSectionClick("description")}
               >
                 <div className="flex justify-between items-start">
@@ -400,7 +467,7 @@ const CompanyProfile = () => {
                 </div>
                 {editingSection === "description" ? (
                   <textarea
-                    className="w-full min-h-36 bg-surface-container-highest border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-fixed outline-none"
+                    className={`${fieldInputClass} min-h-36`}
                     value={draftProfile.description}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) =>
