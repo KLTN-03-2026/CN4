@@ -40,15 +40,16 @@ model Company {
   company_id  Int      @id @default(autoincrement())
   name        String
   description String?
-  location    String?
   website     String?
   category_id Int?
   user_id     Int
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
+  city_id     Int?
 
   user     User      @relation(fields: [user_id], references: [user_id])
   category Category? @relation(fields: [category_id], references: [category_id])
+  city     City?     @relation(fields: [city_id], references: [city_id])
   jobs     Job[]
 }
 
@@ -68,7 +69,6 @@ model Job {
   title           String
   description     String?
   requirements    String?
-  location        String?
   salary_min      Int?
   salary_max      Int?
   benefits        String?
@@ -90,11 +90,12 @@ model Candidate {
   candidate_id     Int     @id @default(autoincrement())
   full_name        String
   phone            String?
-  location         String?
   experience_years Int?
   user_id          Int
+  city_id          Int
 
   user User @relation(fields: [user_id], references: [user_id])
+  city City @relation(fields: [city_id], references: [city_id])
 
   resumes          Resume[]
   applications     Application[]
@@ -166,6 +167,15 @@ model CandidateSkill {
   skill     Skill     @relation(fields: [skill_id], references: [skill_id])
 
   @@id([candidate_id, skill_id])
+}
+
+model City {
+  city_id    Int      @id @default(autoincrement())
+  name       String
+  created_at DateTime @default(now())
+
+  companies  Company[]
+  candidates Candidate[]
 }
 
 enum JobStatus {
