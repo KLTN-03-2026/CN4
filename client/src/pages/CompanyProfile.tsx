@@ -313,9 +313,6 @@ const CompanyProfile = () => {
                   <label className="block font-label text-xs font-bold uppercase tracking-widest text-slate-500">
                     Company Name
                   </label>
-                  <span className="material-symbols-outlined text-slate-400 text-lg">
-                    edit
-                  </span>
                 </div>
                 <input
                   className={getFieldControlClass(editingSection, "name")}
@@ -342,9 +339,6 @@ const CompanyProfile = () => {
                   <label className="block font-label text-xs font-bold uppercase tracking-widest text-slate-500">
                     Industry
                   </label>
-                  <span className="material-symbols-outlined text-slate-400 text-lg">
-                    edit
-                  </span>
                 </div>
                 <select
                   className={getFieldControlClass(editingSection, "industry")}
@@ -383,9 +377,6 @@ const CompanyProfile = () => {
                     <label className="block font-label text-xs font-bold uppercase tracking-widest text-slate-500">
                       City
                     </label>
-                    <span className="material-symbols-outlined text-slate-400 text-lg">
-                      edit
-                    </span>
                   </div>
                   <select
                     className={getFieldControlClass(editingSection, "city")}
@@ -420,9 +411,6 @@ const CompanyProfile = () => {
                     <label className="block font-label text-xs font-bold uppercase tracking-widest text-slate-500">
                       Address
                     </label>
-                    <span className="material-symbols-outlined text-slate-400 text-lg">
-                      edit
-                    </span>
                   </div>
                   <input
                     className={getFieldControlClass(editingSection, "address")}
@@ -450,9 +438,6 @@ const CompanyProfile = () => {
                   <label className="block font-label text-xs font-bold uppercase tracking-widest text-slate-500">
                     Website URL
                   </label>
-                  <span className="material-symbols-outlined text-slate-400 text-lg">
-                    edit
-                  </span>
                 </div>
                 <input
                   className={getFieldControlClass(editingSection, "website")}
@@ -481,9 +466,6 @@ const CompanyProfile = () => {
                   <label className="block font-label text-xs font-bold uppercase tracking-widest text-slate-500">
                     Company Description
                   </label>
-                  <span className="material-symbols-outlined text-slate-400 text-lg">
-                    edit
-                  </span>
                 </div>
                 <textarea
                   className={getFieldControlClass(
