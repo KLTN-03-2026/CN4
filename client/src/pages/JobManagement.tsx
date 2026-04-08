@@ -312,6 +312,7 @@ const JobManagement = () => {
                           <button
                             className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-highest text-secondary transition-colors"
                             title="Edit"
+                            onClick={() => navigate(`edit/${job.job_id}`)}
                           >
                             <span className="material-symbols-outlined text-lg">
                               edit

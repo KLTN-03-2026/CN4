@@ -384,6 +384,299 @@ export const searchSkills = async (req: Request, res: Response) => {
   }
 };
 
+export const getRecruiterJobById = async (req: Request, res: Response) => {
+  try {
+    await prisma.$connect();
+
+    const userId = parseUserId(req.params.userId);
+    if (!userId) {
+      res.status(400).json({ message: "Invalid user id" });
+      return;
+    }
+
+    const jobId = parseJobId(req.params.jobId);
+    if (!jobId) {
+      res.status(400).json({ message: "Invalid job id" });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { user_id: userId },
+      include: { role: true },
+    });
+
+    if (!user || user.role_id !== ROLE_RECRUITER) {
+      res.status(403).json({ message: "Access denied" });
+      return;
+    }
+
+    const company = await prisma.company.findFirst({
+      where: { user_id: userId },
+    });
+
+    if (!company) {
+      res.status(404).json({ message: "Company not found for this recruiter" });
+      return;
+    }
+
+    const job = await prisma.job.findUnique({
+      where: { job_id: jobId },
+      include: {
+        job_skills: {
+          include: {
+            skill: true,
+          },
+        },
+      },
+    });
+
+    if (!job) {
+      res.status(404).json({ message: "Job not found" });
+      return;
+    }
+
+    if (job.company_id !== company.company_id) {
+      res.status(403).json({ message: "You can only access your own jobs" });
+      return;
+    }
+
+    res.status(200).json({
+      job: {
+        job_id: job.job_id,
+        title: job.title,
+        description: job.description,
+        requirements: job.requirements,
+        salary_min: job.salary_min,
+        salary_max: job.salary_max,
+        benefits: job.benefits,
+        expiration_date: job.expiration_date,
+        category_id: job.category_id,
+        skills: job.job_skills.map((item) => item.skill.name),
+      },
+    });
+  } catch (error) {
+    console.error("Get recruiter job by id error:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: errorMessage });
+  }
+};
+
+export const updateRecruiterJob = async (req: Request, res: Response) => {
+  try {
+    await prisma.$connect();
+
+    const userId = parseUserId(req.params.userId);
+    if (!userId) {
+      res.status(400).json({ message: "Invalid user id" });
+      return;
+    }
+
+    const jobId = parseJobId(req.params.jobId);
+    if (!jobId) {
+      res.status(400).json({ message: "Invalid job id" });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { user_id: userId },
+      include: { role: true },
+    });
+
+    if (!user || user.role_id !== ROLE_RECRUITER) {
+      res.status(403).json({ message: "Access denied" });
+      return;
+    }
+
+    const company = await prisma.company.findFirst({
+      where: { user_id: userId },
+    });
+
+    if (!company) {
+      res.status(404).json({ message: "Company not found for this recruiter" });
+      return;
+    }
+
+    const targetJob = await prisma.job.findUnique({
+      where: { job_id: jobId },
+      select: { job_id: true, company_id: true },
+    });
+
+    if (!targetJob) {
+      res.status(404).json({ message: "Job not found" });
+      return;
+    }
+
+    if (targetJob.company_id !== company.company_id) {
+      res.status(403).json({ message: "You can only update your own jobs" });
+      return;
+    }
+
+    const title =
+      typeof req.body.title === "string" ? req.body.title.trim() : "";
+    const description =
+      typeof req.body.description === "string"
+        ? req.body.description.trim()
+        : null;
+    const requirements =
+      typeof req.body.requirements === "string"
+        ? req.body.requirements.trim()
+        : null;
+    const benefits =
+      typeof req.body.benefits === "string" ? req.body.benefits.trim() : null;
+    const categoryId = parsePositiveInteger(req.body.category_id);
+    const salaryMin = parseOptionalInteger(req.body.salary_min);
+    const salaryMax = parseOptionalInteger(req.body.salary_max);
+    const expirationDateValue =
+      typeof req.body.expiration_date === "string"
+        ? req.body.expiration_date.trim()
+        : "";
+    const skillsInput: unknown[] = Array.isArray(req.body.skills)
+      ? req.body.skills
+      : typeof req.body.skills === "string" && req.body.skills.trim()
+        ? req.body.skills.split(",")
+        : [];
+
+    if (!title) {
+      res.status(400).json({ message: "Job title is required" });
+      return;
+    }
+
+    if (!categoryId) {
+      res.status(400).json({ message: "Job category is required" });
+      return;
+    }
+
+    if (salaryMin !== null && salaryMax !== null && salaryMin > salaryMax) {
+      res.status(400).json({ message: "Salary minimum cannot exceed maximum" });
+      return;
+    }
+
+    const category = await prisma.category.findUnique({
+      where: { category_id: categoryId },
+    });
+
+    if (!category) {
+      res.status(404).json({ message: "Category not found" });
+      return;
+    }
+
+    if (!expirationDateValue) {
+      res.status(400).json({ message: "Expiration date is required" });
+      return;
+    }
+
+    const expirationDate = parseDateOnly(expirationDateValue);
+
+    if (!expirationDate) {
+      res.status(400).json({ message: "Invalid expiration date" });
+      return;
+    }
+
+    const today = new Date();
+    const todayStart = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    );
+
+    if (expirationDate <= todayStart) {
+      res.status(400).json({
+        message: "Expiration date must be later than today",
+      });
+      return;
+    }
+
+    const normalizedSkillNames: string[] = Array.from(
+      new Set(
+        skillsInput
+          .map((skill: unknown) =>
+            typeof skill === "string" ? skill.trim() : String(skill).trim(),
+          )
+          .filter(Boolean),
+      ),
+    );
+
+    const updatedJob = await prisma.$transaction(async (transaction) => {
+      await transaction.job.update({
+        where: { job_id: jobId },
+        data: {
+          title,
+          description,
+          requirements,
+          salary_min: salaryMin,
+          salary_max: salaryMax,
+          benefits,
+          expiration_date: expirationDate,
+          category_id: categoryId,
+        },
+      });
+
+      await transaction.jobSkill.deleteMany({
+        where: { job_id: jobId },
+      });
+
+      if (normalizedSkillNames.length > 0) {
+        const linkedSkills = [] as Array<{ skill_id: number }>;
+
+        for (const skillName of normalizedSkillNames) {
+          const skill = await transaction.skill.findFirst({
+            where: {
+              OR: [
+                { name: skillName },
+                { name: { equals: skillName, mode: "insensitive" } },
+              ],
+            },
+          });
+
+          if (skill) {
+            linkedSkills.push({ skill_id: skill.skill_id });
+            continue;
+          }
+
+          const createdSkill = await transaction.skill.create({
+            data: { name: skillName },
+          });
+
+          linkedSkills.push({ skill_id: createdSkill.skill_id });
+        }
+
+        await transaction.jobSkill.createMany({
+          data: linkedSkills.map((skill) => ({
+            job_id: jobId,
+            skill_id: skill.skill_id,
+          })),
+        });
+      }
+
+      return transaction.job.findUnique({
+        where: { job_id: jobId },
+        include: {
+          job_skills: {
+            include: {
+              skill: true,
+            },
+          },
+        },
+      });
+    });
+
+    res.status(200).json({
+      message: "Job updated successfully",
+      job: updatedJob,
+    });
+  } catch (error) {
+    console.error("Update recruiter job error:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: errorMessage });
+  }
+};
+
 export const deleteRecruiterJob = async (req: Request, res: Response) => {
   try {
     await prisma.$connect();

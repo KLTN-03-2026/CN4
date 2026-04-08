@@ -1,270 +1,707 @@
+import { useEffect, useMemo, useState } from "react";
+import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Footer from "../layouts/Footer";
+import Navbar from "../layouts/Navbar";
+
+type StoredUser = {
+  user_id?: number;
+  role?: {
+    role_id?: number;
+    title?: string;
+  };
+};
+
+type Category = {
+  category_id: number;
+  title: string;
+};
+
+type SkillOption = {
+  skill_id: number;
+  name: string;
+};
+
+const toDateOnly = (value: string): Date | null => {
+  const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) {
+    return null;
+  }
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  const parsed = new Date(year, month - 1, day);
+
+  if (
+    parsed.getFullYear() !== year ||
+    parsed.getMonth() !== month - 1 ||
+    parsed.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return parsed;
+};
+
+const toIsoDate = (value: string): string | null => {
+  const parsedDate = toDateOnly(value);
+  if (!parsedDate) {
+    return null;
+  }
+
+  return `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2, "0")}-${String(parsedDate.getDate()).padStart(2, "0")}`;
+};
+
+const toDisplayDate = (value: string | null | undefined): string => {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
+};
+
+const normalizeNumericInput = (value: string) => value.replace(/\D/g, "");
+
+const formatCurrencyInput = (value: string) => {
+  if (!value) {
+    return "";
+  }
+
+  const normalizedValue = normalizeNumericInput(value);
+  if (!normalizedValue) {
+    return "";
+  }
+
+  return Number(normalizedValue).toLocaleString("vi-VN");
+};
+
 const JobEdit = () => {
+  const navigate = useNavigate();
+  const { jobId } = useParams<{ jobId: string }>();
+  const rawUser = useMemo(() => localStorage.getItem("user"), []);
+
+  const parsedUser = useMemo(() => {
+    if (!rawUser) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(rawUser) as StoredUser;
+    } catch {
+      return null;
+    }
+  }, [rawUser]);
+
+  const userId = parsedUser?.user_id;
+
+  const [isLoadingJob, setIsLoadingJob] = useState(true);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [isLoadingSkills, setIsLoadingSkills] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [skillInput, setSkillInput] = useState("");
+  const [skills, setSkills] = useState<string[]>([]);
+  const [skillOptions, setSkillOptions] = useState<SkillOption[]>([]);
+  const [showSkillOptions, setShowSkillOptions] = useState(false);
+
+  const [formData, setFormData] = useState({
+    title: "",
+    categoryId: "",
+    description: "",
+    requirements: "",
+    salaryMin: "",
+    salaryMax: "",
+    benefits: "",
+    expirationDate: "",
+  });
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      setIsLoadingCategories(true);
+      try {
+        const response = await fetch(
+          "http://localhost:3000/api/company-profile/categories",
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.message || "Failed to load categories");
+          return;
+        }
+
+        setCategories(data.categories || []);
+      } catch (loadError) {
+        console.error("Load categories error:", loadError);
+        setError("Unable to load categories.");
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
+
+  useEffect(() => {
+    const loadJob = async () => {
+      if (!userId || !jobId) {
+        setError("Missing job context.");
+        setIsLoadingJob(false);
+        return;
+      }
+
+      setIsLoadingJob(true);
+
+      try {
+        const response = await fetch(
+          `http://localhost:3000/api/jobs/recruiter/${userId}/${jobId}`,
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.message || "Failed to load job details");
+          return;
+        }
+
+        const job = data.job;
+        setFormData({
+          title: job.title || "",
+          categoryId: String(job.category_id || ""),
+          description: job.description || "",
+          requirements: job.requirements || "",
+          salaryMin: job.salary_min ? String(job.salary_min) : "",
+          salaryMax: job.salary_max ? String(job.salary_max) : "",
+          benefits: job.benefits || "",
+          expirationDate: toDisplayDate(job.expiration_date),
+        });
+        setSkills(Array.isArray(job.skills) ? job.skills : []);
+      } catch (loadError) {
+        console.error("Load job detail error:", loadError);
+        setError("Unable to load job details.");
+      } finally {
+        setIsLoadingJob(false);
+      }
+    };
+
+    loadJob();
+  }, [jobId, userId]);
+
+  useEffect(() => {
+    const query = skillInput.trim();
+
+    if (!query) {
+      setSkillOptions([]);
+      setIsLoadingSkills(false);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const loadSkills = async () => {
+      setIsLoadingSkills(true);
+
+      try {
+        const response = await fetch(
+          `http://localhost:3000/api/jobs/skills?q=${encodeURIComponent(query)}`,
+          {
+            signal: controller.signal,
+          },
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          return;
+        }
+
+        setSkillOptions(Array.isArray(data.skills) ? data.skills : []);
+      } catch (loadError) {
+        if (loadError instanceof Error && loadError.name === "AbortError") {
+          return;
+        }
+        console.error("Search skills error:", loadError);
+      } finally {
+        setIsLoadingSkills(false);
+      }
+    };
+
+    void loadSkills();
+
+    return () => {
+      controller.abort();
+    };
+  }, [skillInput]);
+
+  const availableSkillOptions = useMemo(() => {
+    const selected = new Set(skills.map((skill) => skill.toLowerCase()));
+    return skillOptions.filter(
+      (option) => !selected.has(option.name.toLowerCase()),
+    );
+  }, [skillOptions, skills]);
+
+  const handleInputChange = (
+    event: ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
+    const { name, value } = event.target;
+    setFormData((current) => ({ ...current, [name]: value }));
+  };
+
+  const handleSalaryChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    const normalizedValue = normalizeNumericInput(value);
+
+    setFormData((current) => ({
+      ...current,
+      [name]: normalizedValue,
+    }));
+  };
+
+  const handleExpirationDateChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const rawValue = event.target.value.replace(/[^0-9]/g, "").slice(0, 8);
+
+    const day = rawValue.slice(0, 2);
+    const month = rawValue.slice(2, 4);
+    const year = rawValue.slice(4, 8);
+
+    let formattedValue = day;
+    if (month) {
+      formattedValue += `/${month}`;
+    }
+    if (year) {
+      formattedValue += `/${year}`;
+    }
+
+    setFormData((current) => ({
+      ...current,
+      expirationDate: formattedValue,
+    }));
+  };
+
+  const handleAddSkill = () => {
+    const nextSkill = skillInput.trim();
+
+    if (!nextSkill) {
+      return;
+    }
+
+    const matchedSkill = availableSkillOptions.find(
+      (option) => option.name.toLowerCase() === nextSkill.toLowerCase(),
+    );
+
+    if (!matchedSkill) {
+      return;
+    }
+
+    setSkills((current) => [...current, matchedSkill.name]);
+    setSkillInput("");
+    setSkillOptions([]);
+    setShowSkillOptions(false);
+  };
+
+  const handleSkillKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      handleAddSkill();
+    }
+  };
+
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setSkills((current) =>
+      current.filter(
+        (skill) => skill.toLowerCase() !== skillToRemove.toLowerCase(),
+      ),
+    );
+  };
+
+  const handleSelectSkill = (skillName: string) => {
+    setSkills((current) => [...current, skillName]);
+    setSkillInput("");
+    setSkillOptions([]);
+    setShowSkillOptions(false);
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (!userId || !jobId) {
+      setError("Invalid session or job id.");
+      return;
+    }
+
+    if (!formData.title.trim()) {
+      setError("Job title is required.");
+      return;
+    }
+
+    if (!formData.categoryId) {
+      setError("Job category is required.");
+      return;
+    }
+
+    if (!formData.expirationDate) {
+      setError("Expiration date is required.");
+      return;
+    }
+
+    const expirationDate = toDateOnly(formData.expirationDate);
+    const now = new Date();
+    const todayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+
+    if (!expirationDate || expirationDate <= todayStart) {
+      setError("Expiration date must be later than today.");
+      return;
+    }
+
+    const expirationDateIso = toIsoDate(formData.expirationDate);
+    if (!expirationDateIso) {
+      setError("Expiration date is invalid.");
+      return;
+    }
+
+    const salaryMin = formData.salaryMin ? Number(formData.salaryMin) : null;
+    const salaryMax = formData.salaryMax ? Number(formData.salaryMax) : null;
+
+    if (
+      salaryMin !== null &&
+      salaryMax !== null &&
+      Number.isFinite(salaryMin) &&
+      Number.isFinite(salaryMax) &&
+      salaryMin > salaryMax
+    ) {
+      setError("Salary minimum cannot exceed maximum.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/jobs/recruiter/${userId}/${jobId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: formData.title.trim(),
+            category_id: Number(formData.categoryId),
+            description: formData.description.trim(),
+            requirements: formData.requirements.trim(),
+            salary_min: salaryMin,
+            salary_max: salaryMax,
+            benefits: formData.benefits.trim(),
+            expiration_date: expirationDateIso,
+            skills,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Failed to update job");
+        return;
+      }
+
+      setSuccess("Job updated successfully.");
+      navigate("/job-management");
+    } catch (submitError) {
+      console.error("Update job error:", submitError);
+      setError("An error occurred while updating the job.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="text-on-surface selection:bg-primary-fixed selection:text-on-primary-fixed">
-      <div className="relative flex min-h-screen w-full flex-col bg-surface overflow-x-hidden">
-        {/* Updated TopNavBar from SCREEN_16  */}
-        <header className="bg-[#f7f9fb] dark:bg-slate-900 font-manrope antialiased tracking-tight top-0 z-50">
-          <nav className="flex justify-between items-center w-full px-8 py-4 max-w-7xl mx-auto">
-            <div className="flex items-center gap-8">
-              <span className="text-2xl font-black text-primary dark:text-blue-50 tracking-tighter">
-                JobNest
-              </span>
-              <div className="hidden md:flex items-center gap-6">
-                <a
-                  className="text-secondary dark:text-slate-400 font-medium hover:text-primary dark:hover:text-blue-200 transition-colors"
-                  href="#"
-                >
-                  Find Jobs
-                </a>
-                <a
-                  className="text-secondary dark:text-slate-400 font-medium hover:text-primary dark:hover:text-blue-200 transition-colors"
-                  href="#"
-                >
-                  Companies
-                </a>
-                <a
-                  className="text-secondary dark:text-slate-400 font-medium hover:text-primary dark:hover:text-blue-200 transition-colors"
-                  href="#"
-                >
-                  About
-                </a>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <button className="p-2 text-primary dark:text-blue-100 hover:bg-surface-container-low dark:hover:bg-slate-800 rounded-lg transition-all active:scale-95">
-                <span className="material-symbols-outlined">notifications</span>
-              </button>
-              <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-surface-container-high transition-transform hover:scale-105 cursor-pointer">
-                <img
-                  alt="Recruiter Profile Avatar"
-                  className="h-full w-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3nOvsy3jPcqt-ucJqs5RGgVuhKxMwaLaAXAfnZhtTgl1wLiOuwF9MYeygX-KmkOnMZQ9ZPe1BCr7Zpn4hFhou5Bt7eyUqf1b2v_joaR2hh06CE3qvyh0xN3XXipQLpaRcohJ-_2Xj34qc8Azgz-R8hAPU-GpuOrrolC9PgqegLei7ZcYkE26ifHWJ1x9bDX3bsxFNUn_oe5CgF7P0k1wJQEQRWgMjT7pL8nf8vZT4GxYQRQSrme0fUbNHjEOzfe-Q7Ct9HyybeCY"
-                />
-              </div>
-            </div>
-          </nav>
-        </header>
-        <main className="flex-1 flex flex-col items-center py-12 px-6 lg:px-0">
-          <div className="w-full max-w-4xl space-y-12">
-            {/* Hero Section  */}
-            <div className="space-y-4">
-              <span className="inline-flex items-center px-3 py-1 rounded-full bg-secondary-fixed-dim/30 text-on-secondary-fixed text-[10px] font-bold tracking-widest uppercase">
-                Editing Active Listing
-              </span>
-              <h1 className="text-4xl lg:text-5xl font-extrabold text-primary tracking-tight">
-                Edit Job Posting
-              </h1>
-              <p className="text-secondary text-lg max-w-2xl leading-relaxed">
-                Refine the details for the{" "}
-                <span className="text-primary font-semibold">
-                  Senior Product Designer
-                </span>{" "}
-                role to attract high-quality candidates.
-              </p>
-            </div>
-            {/* Form Section  */}
-            <div className="bg-surface-container-lowest p-8 lg:p-12 rounded-xl editorial-shadow space-y-10">
-              {/* Basic Info  */}
+    <div className="bg-background text-on-surface selection:bg-primary-fixed selection:text-on-primary-fixed min-h-screen flex flex-col">
+      <Navbar />
+
+      <main className="max-w-4xl mx-auto px-6 py-16 w-full grow">
+        <div className="mb-12">
+          <h1 className="text-[3.5rem] font-extrabold tracking-tight text-primary leading-tight mb-4">
+            Edit {formData.title || "Job"}
+          </h1>
+          <p className="text-secondary text-lg max-w-2xl leading-relaxed">
+            Update the job information and save changes.
+          </p>
+        </div>
+
+        {isLoadingJob ? (
+          <div className="bg-surface-container-lowest rounded-xl p-8 text-secondary">
+            Loading job details...
+          </div>
+        ) : (
+          <div className="bg-surface-container-lowest rounded-xl p-8 md:p-12 shadow-[0_40px_60px_-5px_rgba(25,28,30,0.06)]">
+            <form className="space-y-10" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-primary uppercase tracking-wider">
+                <div className="space-y-2">
+                  <label className="block text-[10px] uppercase font-bold tracking-widest text-on-surface-variant">
                     Job Title
                   </label>
                   <input
-                    className="w-full bg-surface-container-high border-none rounded-xl p-4 text-on-surface focus:ring-2 focus:ring-primary-fixed focus:bg-surface-container-lowest transition-all"
+                    className="w-full bg-surface-container-highest border-none rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary-fixed focus:bg-white transition-all text-on-surface placeholder:text-outline/50"
+                    name="title"
                     type="text"
-                    value="Senior Product Designer"
+                    value={formData.title}
+                    onChange={handleInputChange}
                   />
                 </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-primary uppercase tracking-wider">
-                    Category
+                <div className="space-y-2">
+                  <label className="block text-[10px] uppercase font-bold tracking-widest text-on-surface-variant">
+                    Job Category
                   </label>
                   <div className="relative">
-                    <select className="w-full bg-surface-container-high border-none rounded-xl p-4 text-on-surface focus:ring-2 focus:ring-primary-fixed focus:bg-surface-container-lowest transition-all appearance-none pr-12 bg-none">
-                      <option selected>Design</option>
-                      <option>Engineering</option>
-                      <option>Marketing</option>
-                      <option>Product</option>
+                    <select
+                      className="w-full bg-surface-container-highest border-none rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary-fixed focus:bg-white transition-all appearance-none text-on-surface"
+                      name="categoryId"
+                      value={formData.categoryId}
+                      onChange={handleInputChange}
+                    >
+                      <option value="">
+                        {isLoadingCategories
+                          ? "Loading categories..."
+                          : "Select Category"}
+                      </option>
+                      {categories.map((category) => (
+                        <option
+                          key={category.category_id}
+                          value={category.category_id}
+                        >
+                          {category.title}
+                        </option>
+                      ))}
                     </select>
-                    <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline/50 pointer-events-none text-[20px]">
+                    <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline pointer-events-none">
                       expand_more
                     </span>
                   </div>
                 </div>
               </div>
-              {/* Job Description  */}
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-primary uppercase tracking-wider">
-                  Job Description
-                </label>
-                <textarea
-                  className="w-full bg-surface-container-high border-none rounded-xl p-4 text-on-surface focus:ring-2 focus:ring-primary-fixed focus:bg-surface-container-lowest transition-all leading-relaxed"
-                  rows={6}
-                >
-                  • Lead design sprints and conceptualization for our core
-                  platform features. • Collaborate with PMs and Engineers to
-                  translate complex requirements into elegant UI solutions. •
-                  Mentor junior designers and conduct high-quality design
-                  reviews. • Maintain and evolve our "Orbit" Design System
-                  across web and mobile surfaces. • Advocate for user-centric
-                  research methodologies in the development cycle.
-                </textarea>
+
+              <div className="space-y-8">
+                <div className="space-y-2">
+                  <label className="block text-[10px] uppercase font-bold tracking-widest text-on-surface-variant">
+                    Job Description
+                  </label>
+                  <div className="rounded-xl overflow-hidden bg-surface-container-highest">
+                    <textarea
+                      className="w-full bg-transparent border-none px-5 py-4 focus:ring-0 text-on-surface placeholder:text-outline/50 resize-none"
+                      name="description"
+                      rows={6}
+                      value={formData.description}
+                      onChange={handleInputChange}
+                    ></textarea>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-[10px] uppercase font-bold tracking-widest text-on-surface-variant">
+                    Requirements
+                  </label>
+                  <div className="rounded-xl overflow-hidden bg-surface-container-highest">
+                    <textarea
+                      className="w-full bg-transparent border-none px-5 py-4 focus:ring-0 text-on-surface placeholder:text-outline/50 resize-none"
+                      name="requirements"
+                      rows={4}
+                      value={formData.requirements}
+                      onChange={handleInputChange}
+                    ></textarea>
+                  </div>
+                </div>
               </div>
-              {/* Requirements  */}
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-primary uppercase tracking-wider">
-                  Requirements
-                </label>
-                <textarea
-                  className="w-full bg-surface-container-high border-none rounded-xl p-4 text-on-surface focus:ring-2 focus:ring-primary-fixed focus:bg-surface-container-lowest transition-all leading-relaxed"
-                  rows={4}
-                >
-                  • 5+ years of experience in product design for SaaS or B2B
-                  platforms. • Strong portfolio demonstrating systems thinking
-                  and UI craftsmanship. • Proficiency in Figma, prototyping
-                  tools, and hand-off processes. • Experience working within
-                  agile cross-functional teams.
-                </textarea>
-              </div>
-              {/* Skills Tags  */}
-              <div className="flex flex-col gap-4">
-                <label className="text-sm font-bold text-primary uppercase tracking-wider">
+
+              <div className="space-y-4">
+                <label className="block text-[10px] uppercase font-bold tracking-widest text-on-surface-variant">
                   Required Skills
                 </label>
-                <div className="flex flex-wrap gap-3">
-                  <span className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-on-primary text-sm font-medium">
-                    Figma{" "}
-                    <span className="material-symbols-outlined text-xs cursor-pointer">
-                      close
+                <div className="space-y-4">
+                  <div className="relative">
+                    <input
+                      className="w-full bg-surface-container-highest border-none rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary-fixed focus:bg-white transition-all text-on-surface placeholder:text-outline/50"
+                      placeholder="Search skills ..."
+                      type="text"
+                      value={skillInput}
+                      onFocus={() => setShowSkillOptions(true)}
+                      onChange={(event) => {
+                        setSkillInput(event.target.value);
+                        setShowSkillOptions(true);
+                      }}
+                      onKeyDown={handleSkillKeyDown}
+                    />
+                    <button
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-primary font-bold text-sm"
+                      type="button"
+                      onClick={handleAddSkill}
+                    >
+                      Add
+                    </button>
+                    {showSkillOptions && skillInput.trim() && (
+                      <div className="absolute z-20 mt-2 w-full rounded-xl border border-outline-variant/20 bg-white shadow-lg overflow-hidden">
+                        {isLoadingSkills ? (
+                          <div className="px-4 py-3 text-sm text-secondary">
+                            Searching skills...
+                          </div>
+                        ) : availableSkillOptions.length === 0 ? (
+                          <div className="px-4 py-3 text-sm text-secondary">
+                            No matching skills.
+                          </div>
+                        ) : (
+                          <ul className="max-h-56 overflow-y-auto">
+                            {availableSkillOptions.map((option) => (
+                              <li key={option.skill_id}>
+                                <button
+                                  type="button"
+                                  className="w-full text-left px-4 py-3 text-sm text-on-surface hover:bg-surface-container-low transition-colors"
+                                  onMouseDown={(event) =>
+                                    event.preventDefault()
+                                  }
+                                  onClick={() => handleSelectSkill(option.name)}
+                                >
+                                  {option.name}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {skills.map((skill) => (
+                      <div
+                        key={skill}
+                        className="flex items-center gap-2 bg-secondary/10 text-secondary px-3 py-1.5 rounded-full text-sm font-semibold border border-secondary/20 transition-all hover:bg-secondary/20"
+                      >
+                        <span>{skill}</span>
+                        <button
+                          className="flex items-center justify-center hover:text-error"
+                          type="button"
+                          onClick={() => handleRemoveSkill(skill)}
+                        >
+                          <span className="material-symbols-outlined text-base">
+                            close
+                          </span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <label className="block text-[10px] uppercase font-bold tracking-widest text-on-surface-variant">
+                  Salary Range
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="relative">
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-outline font-medium text-xs uppercase tracking-wide">
+                      VND
                     </span>
-                  </span>
-                  <span className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-on-primary text-sm font-medium">
-                    React{" "}
-                    <span className="material-symbols-outlined text-xs cursor-pointer">
-                      close
+                    <input
+                      className="w-full bg-surface-container-highest border-none rounded-xl px-5 pr-16 py-4 focus:ring-2 focus:ring-primary-fixed focus:bg-white transition-all"
+                      name="salaryMin"
+                      type="text"
+                      inputMode="numeric"
+                      value={formatCurrencyInput(formData.salaryMin)}
+                      onChange={handleSalaryChange}
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-outline font-medium text-xs uppercase tracking-wide">
+                      VND
                     </span>
-                  </span>
-                  <span className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-on-primary text-sm font-medium">
-                    Python{" "}
-                    <span className="material-symbols-outlined text-xs cursor-pointer">
-                      close
-                    </span>
-                  </span>
-                  <button className="flex items-center gap-2 px-4 py-2 rounded-full border border-dashed border-outline text-secondary text-sm font-medium hover:bg-surface-container-low">
-                    <span className="material-symbols-outlined text-sm">
-                      add
-                    </span>{" "}
-                    Add Skill
+                    <input
+                      className="w-full bg-surface-container-highest border-none rounded-xl px-5 pr-16 py-4 focus:ring-2 focus:ring-primary-fixed focus:bg-white transition-all"
+                      name="salaryMax"
+                      type="text"
+                      inputMode="numeric"
+                      value={formatCurrencyInput(formData.salaryMax)}
+                      onChange={handleSalaryChange}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-[10px] uppercase font-bold tracking-widest text-on-surface-variant">
+                  Benefits
+                </label>
+                <div className="rounded-xl overflow-hidden bg-surface-container-highest">
+                  <textarea
+                    className="w-full bg-transparent border-none px-5 py-4 focus:ring-0 text-on-surface placeholder:text-outline/50 resize-none"
+                    name="benefits"
+                    rows={4}
+                    value={formData.benefits}
+                    onChange={handleInputChange}
+                  ></textarea>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <label className="block text-[10px] uppercase font-bold tracking-widest text-on-surface-variant">
+                  Expiration Date
+                </label>
+                <div className="relative">
+                  <input
+                    className="w-full bg-surface-container-highest border-none rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary-fixed focus:bg-white transition-all text-on-surface"
+                    name="expirationDate"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="dd/mm/yyyy"
+                    maxLength={10}
+                    value={formData.expirationDate}
+                    onChange={handleExpirationDateChange}
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4 pt-6 border-t border-outline-variant/15">
+                {(error || success) && (
+                  <div
+                    className={`rounded-xl px-4 py-3 text-sm ${error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"}`}
+                  >
+                    {error || success}
+                  </div>
+                )}
+                <div className="flex flex-col md:flex-row gap-4">
+                  <button
+                    className="flex-1 bg-primary text-on-primary rounded-xl px-8 py-4 font-bold tracking-tight hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                    type="submit"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Saving..." : "Save Changes"}
+                  </button>
+                  <button
+                    type="button"
+                    className="px-8 bg-surface-container-low text-secondary py-4 rounded-xl font-bold hover:bg-surface-container-high transition-all"
+                    onClick={() => navigate("/job-management")}
+                    disabled={isSubmitting}
+                  >
+                    Cancel
                   </button>
                 </div>
               </div>
-              {/* Benefits  */}
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-primary uppercase tracking-wider">
-                  Benefits 
-                </label>
-                <textarea
-                  className="w-full bg-surface-container-high border-none rounded-xl p-4 text-on-surface focus:ring-2 focus:ring-primary-fixed focus:bg-surface-container-lowest transition-all leading-relaxed"
-                  rows={3}
-                >
-                  • Competitive equity package &amp; performance bonuses. •
-                  Remote-first culture with global co-working access. • $2,500
-                  annual learning and development stipend.
-                </textarea>
-              </div>
-              {/* Financials & Expiry  */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-primary uppercase tracking-wider">
-                    Min Salary
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary">
-                      $
-                    </span>
-                    <input
-                      className="w-full bg-surface-container-high border-none rounded-xl p-4 pl-8 text-on-surface focus:ring-2 focus:ring-primary-fixed focus:bg-surface-container-lowest transition-all"
-                      type="text"
-                      value="120,000"
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-primary uppercase tracking-wider">
-                    Max Salary
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary">
-                      $
-                    </span>
-                    <input
-                      className="w-full bg-surface-container-high border-none rounded-xl p-4 pl-8 text-on-surface focus:ring-2 focus:ring-primary-fixed focus:bg-surface-container-lowest transition-all"
-                      type="text"
-                      value="180,000"
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-primary uppercase tracking-wider">
-                    Expiration Date
-                  </label>
-                  <div className="relative">
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary material-symbols-outlined">
-                      calendar_today
-                    </span>
-                    <input
-                      className="w-full bg-surface-container-high border-none rounded-xl p-4 text-on-surface focus:ring-2 focus:ring-primary-fixed focus:bg-surface-container-lowest transition-all"
-                      type="text"
-                      value="2024-12-31"
-                    />
-                  </div>
-                </div>
-              </div>
-              {/* Action Footer  */}
-              <div className="pt-10 border-t border-outline-variant/15 flex flex-col md:flex-row gap-4">
-                <button className="flex-1 bg-primary text-on-primary py-5 rounded-xl font-bold text-lg hover:brightness-110 transition-all shadow-xl shadow-primary/10">
-                  Save Changes
-                </button>
-                <button className="px-8 bg-surface-container-low text-secondary py-5 rounded-xl font-bold text-lg hover:bg-surface-container-high transition-all">
-                  Discard
-                </button>
-              </div>
-            </div>
-            {/* Footer Context  */}
+            </form>
           </div>
-        </main>
-        {/* Updated Footer from SCREEN_16  */}
-        <footer className="bg-[#f7f9fb] dark:bg-slate-950 font-manrope text-sm tracking-wide border-t border-outline-variant/15 dark:border-slate-800">
-          <div className="flex flex-col md:flex-row justify-between items-center w-full px-12 py-8 gap-4 max-w-7xl mx-auto">
-            <span className="text-secondary dark:text-slate-500">
-              © 2024 JobNest. Curating the future of work.
-            </span>
-            <div className="flex gap-8">
-              <a
-                className="text-secondary dark:text-slate-500 uppercase tracking-widest text-[10px] hover:text-primary dark:hover:text-blue-400 underline underline-offset-4 transition-opacity"
-                href="#"
-              >
-                Privacy Policy
-              </a>
-              <a
-                className="text-secondary dark:text-slate-500 uppercase tracking-widest text-[10px] hover:text-primary dark:hover:text-blue-400 underline underline-offset-4 transition-opacity"
-                href="#"
-              >
-                Terms of Service
-              </a>
-              <a
-                className="text-secondary dark:text-slate-500 uppercase tracking-widest text-[10px] hover:text-primary dark:hover:text-blue-400 underline underline-offset-4 transition-opacity"
-                href="#"
-              >
-                Support
-              </a>
-            </div>
-          </div>
-        </footer>
-        {/* Signature Texture/Editorial Gradient Element  */}
-        <div className="fixed bottom-0 right-0 w-96 h-96 -z-10 bg-linear-to-tl from-primary-fixed/20 to-transparent blur-3xl rounded-full translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
-      </div>
+        )}
+      </main>
+
+      <Footer />
     </div>
   );
 };

@@ -13,6 +13,7 @@ import JobListing from "./pages/JobListing";
 import CompanyProfile from "./pages/CompanyProfile";
 import JobManagement from "./pages/JobManagement";
 import JobPost from "./pages/JobPost";
+import JobEdit from "./pages/JobEdit";
 import ApplicationManagement from "./pages/ApplicationManagement";
 
 type StoredUser = {
@@ -57,6 +58,7 @@ const App = () => {
           <Route path="/job-management" element={<Outlet />}>
             <Route index element={<JobManagement />} />
             <Route path="post" element={<JobPost />} />
+            <Route path="edit/:jobId" element={<JobEdit />} />
           </Route>
           <Route
             path="/application-management"
