@@ -48,6 +48,41 @@ export const getCategories = async (_req, res) => {
             .json({ message: "Internal server error", error: errorMessage });
     }
 };
+export const getPublicCompanies = async (_req, res) => {
+    try {
+        await prisma.$connect();
+        const companies = await prisma.company.findMany({
+            include: {
+                category: true,
+                city: true,
+                _count: {
+                    select: { jobs: true },
+                },
+            },
+            orderBy: {
+                created_at: "desc",
+            },
+        });
+        res.status(200).json({
+            companies: companies.map((company) => ({
+                company_id: company.company_id,
+                name: company.name,
+                description: company.description,
+                category: company.category?.title ?? "General",
+                location: company.city?.name || company.address || "Remote",
+                open_roles_count: company._count.jobs,
+                since_year: company.created_at.getFullYear(),
+            })),
+        });
+    }
+    catch (error) {
+        console.error("Get public companies error:", error);
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        res
+            .status(500)
+            .json({ message: "Internal server error", error: errorMessage });
+    }
+};
 export const getCities = async (_req, res) => {
     try {
         await prisma.$connect();

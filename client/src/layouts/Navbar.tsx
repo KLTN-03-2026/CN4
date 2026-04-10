@@ -82,6 +82,10 @@ const Navbar = () => {
     navigate("/job-listing");
   };
 
+  const handleFindCompanies = () => {
+    navigate("/company-listing");
+  };
+
   const handleRecruiterMenuNavigate = (path: string) => {
     setIsRecruiterMenuOpen(false);
     navigate(path);
@@ -111,6 +115,10 @@ const Navbar = () => {
             <a
               className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors font-semibold"
               href="#"
+              onClick={(event) => {
+                event.preventDefault();
+                handleFindCompanies();
+              }}
             >
               Companies
             </a>
