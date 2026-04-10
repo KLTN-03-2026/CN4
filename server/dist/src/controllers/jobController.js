@@ -58,6 +58,66 @@ function normalizeSkillName(value) {
         .replace(/[^a-zA-Z0-9]/g, "")
         .toLowerCase();
 }
+const formatMillionVnd = (value) => {
+    const millionValue = value / 1_000_000;
+    return Number.isInteger(millionValue)
+        ? `${millionValue}`
+        : `${millionValue.toFixed(1).replace(/\.0$/, "")}`;
+};
+const formatSalaryLabel = (salaryMin, salaryMax) => {
+    if (salaryMin !== null && salaryMax !== null) {
+        return `${formatMillionVnd(salaryMin)}-${formatMillionVnd(salaryMax)} triệu`;
+    }
+    if (salaryMax !== null) {
+        return `Up to ${formatMillionVnd(salaryMax)} triệu`;
+    }
+    if (salaryMin !== null) {
+        return `From ${formatMillionVnd(salaryMin)} triệu`;
+    }
+    return "Salary negotiable";
+};
+export const getPublicJobs = async (_req, res) => {
+    try {
+        await prisma.$connect();
+        const jobs = await prisma.job.findMany({
+            include: {
+                company: {
+                    include: {
+                        city: true,
+                    },
+                },
+                category: true,
+                job_skills: {
+                    include: {
+                        skill: true,
+                    },
+                },
+            },
+            orderBy: {
+                created_at: "desc",
+            },
+        });
+        res.status(200).json({
+            jobs: jobs.map((job) => ({
+                job_id: job.job_id,
+                title: job.title,
+                company_name: job.company.name,
+                category: job.category?.title ?? "General",
+                location: job.company.city?.name || job.company.address || "Remote",
+                created_at: job.created_at,
+                salary_label: formatSalaryLabel(job.salary_min, job.salary_max),
+                skills: job.job_skills.map((item) => item.skill.name),
+            })),
+        });
+    }
+    catch (error) {
+        console.error("Get public jobs error:", error);
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        res
+            .status(500)
+            .json({ message: "Internal server error", error: errorMessage });
+    }
+};
 export const getRecruiterJobs = async (req, res) => {
     try {
         await prisma.$connect();
@@ -421,7 +481,9 @@ export const updateRecruiterJob = async (req, res) => {
             return;
         }
         const title = typeof req.body.title === "string" ? req.body.title.trim() : "";
-        const description = typeof req.body.description === "string" ? req.body.description.trim() : null;
+        const description = typeof req.body.description === "string"
+            ? req.body.description.trim()
+            : null;
         const requirements = typeof req.body.requirements === "string"
             ? req.body.requirements.trim()
             : null;

@@ -1,4 +1,5 @@
 import express from "express";
+import { getPublicJobs } from "../controllers/jobController";
 import { getRecruiterJobs } from "../controllers/jobController";
 import { createRecruiterJob } from "../controllers/jobController";
 import { searchSkills } from "../controllers/jobController";
@@ -6,6 +7,7 @@ import { deleteRecruiterJob } from "../controllers/jobController";
 import { getRecruiterJobById } from "../controllers/jobController";
 import { updateRecruiterJob } from "../controllers/jobController";
 const router = express.Router();
+router.get("/", getPublicJobs);
 router.get("/skills", searchSkills);
 router.get("/recruiter/:userId", getRecruiterJobs);
 router.post("/recruiter/:userId", createRecruiterJob);
