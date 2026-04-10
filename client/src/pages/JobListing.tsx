@@ -40,6 +40,8 @@ const JobListing = () => {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 7;
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -85,7 +87,23 @@ const JobListing = () => {
     });
   }, [jobs, locationQuery, searchQuery]);
 
-  const visibleCountText = `Showing ${filteredJobs.length} of ${jobs.length} results`;
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedJobs = filteredJobs.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, locationQuery]);
+
+  // Scroll to top when page changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentPage]);
+
+  const visibleCountText = `Showing ${startIndex + 1}-${Math.min(endIndex, filteredJobs.length)} of ${filteredJobs.length} results`;
 
   return (
     <div className="bg-surface selection:bg-primary-fixed selection:text-primary min-h-screen flex flex-col">
@@ -95,7 +113,8 @@ const JobListing = () => {
         <section className="mb-20">
           <div className="max-w-4xl">
             <h1 className="text-primary font-headline font-extrabold text-6xl tracking-tight mb-10 leading-[1.1]">
-              Discover your <span className="text-surface-tint">next chapter</span>.
+              Discover your{" "}
+              <span className="text-surface-tint">next chapter</span>.
             </h1>
           </div>
           <div className="bg-white shadow-xl shadow-slate-200/50 p-2 rounded-2xl flex flex-row items-center gap-2 border border-slate-100">
@@ -134,13 +153,18 @@ const JobListing = () => {
             <span className="text-[0.7rem] font-bold tracking-[0.25em] text-secondary uppercase mb-2 block">
               Curated Listings
             </span>
-            <h2 className="text-3xl font-bold text-primary">Latest Opportunities</h2>
+            <h2 className="text-3xl font-bold text-primary">
+              Latest Opportunities
+            </h2>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-secondary">{visibleCountText}</span>
+            <span className="text-sm font-medium text-secondary">
+              {visibleCountText}
+            </span>
             <div className="h-8 w-px bg-outline-variant/30"></div>
             <button className="flex items-center gap-2 text-sm font-bold text-primary hover:text-surface-tint transition-colors">
-              Filter <span className="material-symbols-outlined text-lg">tune</span>
+              Filter{" "}
+              <span className="material-symbols-outlined text-lg">tune</span>
             </button>
           </div>
         </div>
@@ -159,7 +183,7 @@ const JobListing = () => {
               No jobs found.
             </div>
           ) : (
-            filteredJobs.map((job) => {
+            paginatedJobs.map((job) => {
               const primarySkill = job.skills[0] || job.category;
               const secondarySkill = job.skills[1] || job.location;
               const tertiarySkill = job.skills[2] || "Professional";
@@ -179,7 +203,9 @@ const JobListing = () => {
                     <div className="grow">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="text-xl font-bold text-primary mb-1">{job.title}</h3>
+                          <h3 className="text-xl font-bold text-primary mb-1">
+                            {job.title}
+                          </h3>
                           <p className="text-secondary text-sm font-bold uppercase tracking-wide mb-3">
                             {job.company_name}
                           </p>
@@ -206,7 +232,9 @@ const JobListing = () => {
                       <span className="text-slate-300">|</span>
                       <span>{tertiarySkill}</span>
                       {moreCount > 0 && (
-                        <span className="text-surface-tint ml-1">+{moreCount}</span>
+                        <span className="text-surface-tint ml-1">
+                          +{moreCount}
+                        </span>
                       )}
                     </div>
                     <div className="flex items-center gap-4">
@@ -221,31 +249,45 @@ const JobListing = () => {
           )}
         </div>
 
-        <div className="mt-16 flex items-center justify-center gap-2">
-          <button className="p-2.5 rounded-lg text-secondary hover:bg-surface-container-high transition-colors flex items-center justify-center">
-            <span className="material-symbols-outlined">chevron_left</span>
-            <span className="text-sm font-bold pr-2">Previous</span>
-          </button>
-          <div className="flex items-center gap-1">
-            <button className="h-10 w-10 flex items-center justify-center rounded-lg bg-primary text-on-primary font-bold text-sm">
-              1
+        {totalPages > 1 && (
+          <div className="mt-16 flex items-center justify-center gap-2">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="p-2.5 rounded-lg text-secondary hover:bg-surface-container-high transition-colors flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <span className="material-symbols-outlined">chevron_left</span>
+              <span className="text-sm font-bold pr-2">Previous</span>
             </button>
-            <button className="h-10 w-10 flex items-center justify-center rounded-lg text-secondary hover:bg-surface-container-high font-bold text-sm transition-colors">
-              2
-            </button>
-            <button className="h-10 w-10 flex items-center justify-center rounded-lg text-secondary hover:bg-surface-container-high font-bold text-sm transition-colors">
-              3
-            </button>
-            <span className="px-2 text-outline">...</span>
-            <button className="h-10 w-10 flex items-center justify-center rounded-lg text-secondary hover:bg-surface-container-high font-bold text-sm transition-colors">
-              18
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`h-10 w-10 flex items-center justify-center rounded-lg font-bold text-sm transition-all ${
+                      currentPage === page
+                        ? "bg-primary text-on-primary shadow-sm"
+                        : "text-secondary hover:bg-surface-container-high"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ),
+              )}
+            </div>
+            <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+              }
+              disabled={currentPage === totalPages}
+              className="p-2.5 rounded-lg text-secondary hover:bg-surface-container-high transition-colors flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <span className="text-sm font-bold pl-2">Next</span>
+              <span className="material-symbols-outlined">chevron_right</span>
             </button>
           </div>
-          <button className="p-2.5 rounded-lg text-secondary hover:bg-surface-container-high transition-colors flex items-center justify-center">
-            <span className="text-sm font-bold pl-2">Next</span>
-            <span className="material-symbols-outlined">chevron_right</span>
-          </button>
-        </div>
+        )}
       </main>
 
       <footer className="bg-[#f7f9fb] dark:bg-slate-950 w-full mt-24 border-t border-outline-variant/15">
@@ -256,7 +298,8 @@ const JobListing = () => {
                 JobNest
               </span>
               <p className="font-manrope text-sm text-secondary dark:text-slate-400 max-w-xs">
-                Curating the future of professional work with intelligence and serenity.
+                Curating the future of professional work with intelligence and
+                serenity.
               </p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-16">
