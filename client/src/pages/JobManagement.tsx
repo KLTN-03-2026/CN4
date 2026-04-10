@@ -61,6 +61,8 @@ const JobManagement = () => {
   const [pendingDeleteJob, setPendingDeleteJob] = useState<RecruiterJob | null>(
     null,
   );
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   const rawUser = useMemo(() => localStorage.getItem("user"), []);
 
@@ -126,6 +128,17 @@ const JobManagement = () => {
         job.location.toLowerCase().includes(query),
     );
   }, [jobs, searchQuery]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedJobs = filteredJobs.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   const handleDeleteJob = (job: RecruiterJob) => {
     setPendingDeleteJob(job);
@@ -267,7 +280,7 @@ const JobManagement = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredJobs.map((job) => (
+                  paginatedJobs.map((job) => (
                     <tr
                       key={job.job_id}
                       className="hover:bg-surface-container-low transition-colors group"
@@ -338,30 +351,44 @@ const JobManagement = () => {
               </tbody>
             </table>
           </div>
-          {/* Updated Pagination Section  */}
+          {/* Pagination Section  */}
           <div className="px-8 py-4 bg-surface-container-low flex justify-between items-center">
             <span className="text-[0.7rem] font-label text-secondary uppercase tracking-widest">
-              Showing {filteredJobs.length} of {jobs.length} listings
+              Showing {startIndex + 1}-{Math.min(endIndex, filteredJobs.length)}{" "}
+              of {filteredJobs.length} listings
             </span>
             <nav className="flex items-center gap-2">
               <button
                 className="text-[0.7rem] font-label text-secondary uppercase tracking-widest hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed px-2"
-                disabled
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
               >
                 Previous
               </button>
               <div className="flex items-center gap-1">
-                <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-on-primary text-xs font-bold transition-all shadow-sm">
-                  1
-                </button>
-                <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-highest text-secondary text-xs font-bold transition-all">
-                  2
-                </button>
-                <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-highest text-secondary text-xs font-bold transition-all">
-                  3
-                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${
+                        currentPage === page
+                          ? "bg-primary text-on-primary shadow-sm"
+                          : "hover:bg-surface-container-highest text-secondary"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ),
+                )}
               </div>
-              <button className="text-[0.7rem] font-label text-secondary uppercase tracking-widest hover:text-primary transition-colors px-2">
+              <button
+                className="text-[0.7rem] font-label text-secondary uppercase tracking-widest hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed px-2"
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                }
+                disabled={currentPage === totalPages || totalPages === 0}
+              >
                 Next
               </button>
             </nav>

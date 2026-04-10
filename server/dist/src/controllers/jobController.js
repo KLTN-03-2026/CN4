@@ -76,6 +76,14 @@ const formatSalaryLabel = (salaryMin, salaryMax) => {
     }
     return "Salary negotiable";
 };
+const normalizeJobStatus = (status) => {
+    const statusStr = String(status).toLowerCase().trim();
+    const validStatuses = ["open", "closed", "pending", "expired"];
+    if (validStatuses.includes(statusStr)) {
+        return statusStr;
+    }
+    return "open"; // Default to open if invalid
+};
 export const getPublicJobs = async (_req, res) => {
     try {
         await prisma.$connect();
@@ -155,7 +163,7 @@ export const getRecruiterJobs = async (req, res) => {
         const mappedJobs = jobs.map((job) => ({
             job_id: job.job_id,
             title: job.title,
-            status: job.status,
+            status: normalizeJobStatus(job.status),
             created_at: job.created_at,
             category: job.category?.title ?? "General",
             applicants_count: job._count.applications,
