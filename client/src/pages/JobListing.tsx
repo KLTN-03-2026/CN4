@@ -114,18 +114,18 @@ const JobListing = () => {
       <main className="w-full max-w-360 mx-auto px-12 py-12 grow">
         <section className="mb-20">
           <div className="max-w-4xl">
-            <h1 className="text-primary font-headline font-extrabold text-6xl tracking-tight mb-10 leading-[1.1]">
+            <h1 className="text-primary font-headline font-extrabold text-5xl tracking-tight mb-8 leading-[1.1]">
               Discover your{" "}
               <span className="text-surface-tint">next chapter</span>.
             </h1>
           </div>
-          <div className="bg-white shadow-xl shadow-slate-200/50 p-2 rounded-2xl flex flex-row items-center gap-2 border border-slate-100">
+          <div className="bg-white shadow-xl shadow-slate-200/50 p-1.5 rounded-2xl flex flex-row items-center gap-2 border border-slate-100">
             <div className="grow relative flex items-center border-r border-slate-100">
               <span className="material-symbols-outlined absolute left-6 text-secondary">
                 search
               </span>
               <input
-                className="w-full bg-transparent border-none py-6 pl-16 pr-6 text-on-surface focus:ring-0 outline-none placeholder:text-outline-variant text-lg"
+                className="w-full bg-transparent border-none py-5 pl-14 pr-5 text-on-surface focus:ring-0 outline-none placeholder:text-outline-variant text-base"
                 placeholder="Search roles, skills, or companies..."
                 type="text"
                 value={searchQuery}
@@ -137,14 +137,14 @@ const JobListing = () => {
                 location_on
               </span>
               <input
-                className="w-full bg-transparent border-none py-6 pl-16 pr-6 text-on-surface focus:ring-0 outline-none placeholder:text-outline-variant text-lg"
+                className="w-full bg-transparent border-none py-5 pl-14 pr-5 text-on-surface focus:ring-0 outline-none placeholder:text-outline-variant text-base"
                 placeholder="Location"
                 type="text"
                 value={locationQuery}
                 onChange={(event) => setLocationQuery(event.target.value)}
               />
             </div>
-            <button className="bg-primary text-on-primary px-12 py-5 rounded-xl font-bold text-lg hover:opacity-95 transition-all active:scale-[0.98] shadow-lg shadow-primary/20">
+            <button className="bg-primary text-on-primary px-10 py-4 rounded-xl font-bold text-base hover:opacity-95 transition-all active:scale-[0.98] shadow-lg shadow-primary/20">
               Find Jobs
             </button>
           </div>
