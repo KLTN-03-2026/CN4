@@ -69,7 +69,7 @@ const RecruiterLogin = () => {
             </p>
           </div>
           <div className="bg-surface-container-lowest rounded-xl p-8 md:p-12 editorial-shadow border border-outline-variant/15">
-            <div className="mb-8 text-center md:text-left">
+            <div className="mb-8 text-center">
               <h2 className="text-2xl font-bold text-primary mb-2">
                 Recruiter Log In
               </h2>
