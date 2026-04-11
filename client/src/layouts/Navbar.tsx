@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 type StoredUser = {
@@ -22,6 +22,8 @@ const Navbar = () => {
   );
   const [isRecruiterMenuOpen, setIsRecruiterMenuOpen] = useState(false);
   const [isCandidateMenuOpen, setIsCandidateMenuOpen] = useState(false);
+  const recruiterMenuRef = useRef<HTMLDivElement | null>(null);
+  const candidateMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const rawUser = localStorage.getItem("user");
@@ -47,6 +49,32 @@ const Navbar = () => {
     } catch {
       setCurrentUser(null);
     }
+  }, []);
+
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target as Node;
+
+      if (
+        recruiterMenuRef.current &&
+        !recruiterMenuRef.current.contains(target)
+      ) {
+        setIsRecruiterMenuOpen(false);
+      }
+
+      if (
+        candidateMenuRef.current &&
+        !candidateMenuRef.current.contains(target)
+      ) {
+        setIsCandidateMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
   }, []);
 
   const isRecruiter =
@@ -150,7 +178,7 @@ const Navbar = () => {
           {isLoggedIn ? (
             <div className="flex items-center gap-3">
               {isRecruiter ? (
-                <div className="relative">
+                <div className="relative" ref={recruiterMenuRef}>
                   <button
                     className="px-4 py-2 rounded-lg bg-surface-container-low border border-outline-variant/20 text-sm font-semibold text-primary flex items-center gap-2"
                     onClick={() => setIsRecruiterMenuOpen((prev) => !prev)}
@@ -191,7 +219,7 @@ const Navbar = () => {
                   )}
                 </div>
               ) : (
-                <div className="relative">
+                <div className="relative" ref={candidateMenuRef}>
                   <button
                     className="px-4 py-2 rounded-lg bg-surface-container-low border border-outline-variant/20 text-sm font-semibold text-primary flex items-center gap-2"
                     onClick={() => setIsCandidateMenuOpen((prev) => !prev)}
