@@ -17,6 +17,8 @@ import JobManagement from "./pages/JobManagement";
 import JobPost from "./pages/JobPost";
 import JobEdit from "./pages/JobEdit";
 import ApplicationManagement from "./pages/ApplicationManagement";
+import CandidateProfile from "./pages/CandidateProfile";
+import CandidateApplications from "./pages/CandidateApplications";
 
 type StoredUser = {
   role?: {
@@ -77,6 +79,29 @@ const RecruiterPrivateRoute = () => {
   }
 };
 
+const CandidatePrivateRoute = () => {
+  const rawUser = localStorage.getItem("user");
+
+  if (!rawUser) {
+    return <Navigate to="/candidate-login" replace />;
+  }
+
+  try {
+    const user = JSON.parse(rawUser) as StoredUser;
+    const isCandidate =
+      user?.role?.role_id === 3 ||
+      user?.role?.title?.toLowerCase() === "candidate";
+
+    if (!isCandidate) {
+      return <Navigate to="/candidate-login" replace />;
+    }
+
+    return <Outlet />;
+  } catch {
+    return <Navigate to="/candidate-login" replace />;
+  }
+};
+
 const PublicOnlyRoute = () => {
   // Child routes decide whether to redirect based on role.
   return <Outlet />;
@@ -121,6 +146,14 @@ const App = () => {
           <Route
             path="/application-management"
             element={<ApplicationManagement />}
+          />
+        </Route>
+
+        <Route element={<CandidatePrivateRoute />}>
+          <Route path="/candidate-profile" element={<CandidateProfile />} />
+          <Route
+            path="/candidate-applications"
+            element={<CandidateApplications />}
           />
         </Route>
 

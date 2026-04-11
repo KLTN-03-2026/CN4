@@ -21,6 +21,7 @@ const Navbar = () => {
     null,
   );
   const [isRecruiterMenuOpen, setIsRecruiterMenuOpen] = useState(false);
+  const [isCandidateMenuOpen, setIsCandidateMenuOpen] = useState(false);
 
   useEffect(() => {
     const rawUser = localStorage.getItem("user");
@@ -65,6 +66,7 @@ const Navbar = () => {
     setCurrentUser(null);
     setCurrentCompany(null);
     setIsRecruiterMenuOpen(false);
+    setIsCandidateMenuOpen(false);
   };
 
   const handleLogout = () => {
@@ -88,6 +90,11 @@ const Navbar = () => {
 
   const handleRecruiterMenuNavigate = (path: string) => {
     setIsRecruiterMenuOpen(false);
+    navigate(path);
+  };
+
+  const handleCandidateMenuNavigate = (path: string) => {
+    setIsCandidateMenuOpen(false);
     navigate(path);
   };
 
@@ -184,8 +191,37 @@ const Navbar = () => {
                   )}
                 </div>
               ) : (
-                <div className="px-4 py-2 rounded-lg bg-surface-container-low border border-outline-variant/20 text-sm font-semibold text-primary">
-                  {displayIdentity}
+                <div className="relative">
+                  <button
+                    className="px-4 py-2 rounded-lg bg-surface-container-low border border-outline-variant/20 text-sm font-semibold text-primary flex items-center gap-2"
+                    onClick={() => setIsCandidateMenuOpen((prev) => !prev)}
+                  >
+                    <span>{displayIdentity}</span>
+                    <span className="material-symbols-outlined text-base">
+                      arrow_drop_down
+                    </span>
+                  </button>
+
+                  {isCandidateMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white border border-outline-variant/20 rounded-xl shadow-lg z-50 py-2">
+                      <button
+                        className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors"
+                        onClick={() =>
+                          handleCandidateMenuNavigate("/candidate-profile")
+                        }
+                      >
+                        Profile Management
+                      </button>
+                      <button
+                        className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors"
+                        onClick={() =>
+                          handleCandidateMenuNavigate("/candidate-applications")
+                        }
+                      >
+                        Application Management
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
               <button
