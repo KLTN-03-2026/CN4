@@ -1,59 +1,338 @@
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Footer from "../layouts/Footer";
+import Navbar from "../layouts/Navbar";
+
+type StoredUser = {
+  user_id?: number;
+  email?: string;
+  full_name?: string | null;
+  role?: {
+    role_id?: number;
+    title?: string;
+  };
+};
+
+type CityOption = {
+  city_id: number;
+  name: string;
+};
+
+type SkillOption = {
+  skill_id: number;
+  name: string;
+};
+
+type CandidateProfileData = {
+  full_name: string;
+  phone: string;
+  email: string;
+  city_id: number;
+  skills: string[];
+};
+
+const emptyProfile: CandidateProfileData = {
+  full_name: "",
+  phone: "",
+  email: "",
+  city_id: 0,
+  skills: [],
+};
+
 const CandidateProfile = () => {
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<CandidateProfileData>(emptyProfile);
+  const [draftProfile, setDraftProfile] =
+    useState<CandidateProfileData>(emptyProfile);
+  const [cities, setCities] = useState<CityOption[]>([]);
+  const [skillInput, setSkillInput] = useState("");
+  const [skillOptions, setSkillOptions] = useState<SkillOption[]>([]);
+  const [isLoadingSkills, setIsLoadingSkills] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const rawUser = useMemo(() => localStorage.getItem("user"), []);
+
+  const parsedUser = useMemo(() => {
+    if (!rawUser) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(rawUser) as StoredUser;
+    } catch {
+      return null;
+    }
+  }, [rawUser]);
+
+  const userId = parsedUser?.user_id;
+  const isCandidate =
+    parsedUser?.role?.role_id === 1 ||
+    parsedUser?.role?.title?.toLowerCase() === "candidate";
+
+  useEffect(() => {
+    if (!userId || !isCandidate) {
+      navigate("/candidate-login", { replace: true });
+      return;
+    }
+
+    const fetchCandidateProfile = async () => {
+      setIsLoading(true);
+      setError("");
+
+      try {
+        const [profileResponse, citiesResponse] = await Promise.all([
+          fetch(`http://localhost:3000/api/candidate-profile/${userId}`),
+          fetch("http://localhost:3000/api/candidate-profile/cities"),
+        ]);
+
+        const profileData = await profileResponse.json();
+        const citiesData = await citiesResponse.json();
+
+        if (!profileResponse.ok) {
+          setError(profileData.message || "Failed to load candidate profile");
+          return;
+        }
+
+        if (citiesResponse.ok) {
+          setCities(citiesData.cities || []);
+        }
+
+        const normalizedProfile = {
+          full_name: profileData.candidate?.full_name ?? "",
+          phone: profileData.candidate?.phone ?? "",
+          email: profileData.user?.email ?? parsedUser?.email ?? "",
+          city_id: profileData.candidate?.city_id ?? 0,
+          skills: Array.isArray(profileData.candidate?.skills)
+            ? profileData.candidate.skills
+            : [],
+        };
+
+        setProfile(normalizedProfile);
+        setDraftProfile(normalizedProfile);
+      } catch (err) {
+        setError("An error occurred while loading profile.");
+        console.error("Fetch candidate profile error:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCandidateProfile();
+  }, [isCandidate, navigate, parsedUser?.email, userId]);
+
+  useEffect(() => {
+    const query = skillInput.trim();
+
+    if (!query) {
+      setSkillOptions([]);
+      setIsLoadingSkills(false);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const loadSkills = async () => {
+      setIsLoadingSkills(true);
+
+      try {
+        const response = await fetch(
+          `http://localhost:3000/api/jobs/skills?q=${encodeURIComponent(query)}`,
+          {
+            signal: controller.signal,
+          },
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          return;
+        }
+
+        setSkillOptions(Array.isArray(data.skills) ? data.skills : []);
+      } catch (loadError) {
+        if (loadError instanceof Error && loadError.name === "AbortError") {
+          return;
+        }
+        console.error("Search skills error:", loadError);
+      } finally {
+        setIsLoadingSkills(false);
+      }
+    };
+
+    void loadSkills();
+
+    return () => {
+      controller.abort();
+    };
+  }, [skillInput]);
+
+  const availableSkillOptions = useMemo(() => {
+    const selected = new Set(
+      draftProfile.skills.map((skill) => skill.toLowerCase()),
+    );
+
+    return skillOptions.filter(
+      (option) => !selected.has(option.name.toLowerCase()),
+    );
+  }, [draftProfile.skills, skillOptions]);
+
+  const handleDiscard = () => {
+    setDraftProfile(profile);
+    setSkillInput("");
+    setSkillOptions([]);
+    setError("");
+    setSuccess("");
+  };
+
+  const handleAddSkill = () => {
+    const nextSkill = skillInput.trim();
+
+    if (!nextSkill) {
+      return;
+    }
+
+    const isDuplicate = draftProfile.skills.some(
+      (skill) => skill.toLowerCase() === nextSkill.toLowerCase(),
+    );
+
+    if (isDuplicate) {
+      setSkillInput("");
+      setSkillOptions([]);
+      return;
+    }
+
+    setDraftProfile((current) => ({
+      ...current,
+      skills: [...current.skills, nextSkill],
+    }));
+    setSkillInput("");
+    setSkillOptions([]);
+  };
+
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setDraftProfile((current) => ({
+      ...current,
+      skills: current.skills.filter(
+        (skill) => skill.toLowerCase() !== skillToRemove.toLowerCase(),
+      ),
+    }));
+  };
+
+  const handleSelectSkill = (skillName: string) => {
+    const isDuplicate = draftProfile.skills.some(
+      (skill) => skill.toLowerCase() === skillName.toLowerCase(),
+    );
+
+    if (!isDuplicate) {
+      setDraftProfile((current) => ({
+        ...current,
+        skills: [...current.skills, skillName],
+      }));
+    }
+
+    setSkillInput("");
+    setSkillOptions([]);
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!userId) {
+      setError("Invalid user session");
+      return;
+    }
+
+    if (!draftProfile.full_name.trim()) {
+      setError("Full name cannot be empty");
+      return;
+    }
+
+    if (!draftProfile.city_id) {
+      setError("Please select your city");
+      return;
+    }
+
+    setIsSaving(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/candidate-profile/${userId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            full_name: draftProfile.full_name,
+            phone: draftProfile.phone,
+            city_id: draftProfile.city_id,
+            skills: draftProfile.skills,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Failed to update candidate profile");
+        return;
+      }
+
+      const updatedProfile = {
+        full_name: data.candidate?.full_name ?? "",
+        phone: data.candidate?.phone ?? "",
+        email: data.user?.email ?? draftProfile.email,
+        city_id: data.candidate?.city_id ?? draftProfile.city_id,
+        skills: Array.isArray(data.candidate?.skills)
+          ? data.candidate.skills
+          : draftProfile.skills,
+      };
+
+      setProfile(updatedProfile);
+      setDraftProfile(updatedProfile);
+      setSkillInput("");
+      setSkillOptions([]);
+      setSuccess("Profile updated successfully.");
+
+      const user = parsedUser || {};
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          ...user,
+          full_name: updatedProfile.full_name,
+          email: updatedProfile.email,
+        }),
+      );
+    } catch (err) {
+      setError("An error occurred while saving profile.");
+      console.error("Update candidate profile error:", err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="bg-surface text-on-surface antialiased min-h-screen">
+        <Navbar />
+        <main className="max-w-200 mx-auto px-6 py-12 pt-32">
+          <div className="bg-surface-container-lowest p-8 lg:p-12 rounded-xl">
+            <p className="text-secondary">Loading candidate profile...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="bg-surface text-on-surface antialiased">
       {/* TopNavBar Component  */}
-      <header className="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm h-16">
-        <div className="flex justify-between items-center px-8 h-full w-full max-w-7xl mx-auto">
-          <div className="flex items-center gap-12">
-            <span className="text-xl font-bold text-slate-900 dark:text-slate-50 tracking-tight">
-              JobNest
-            </span>
-            <nav className="hidden md:flex items-center gap-8">
-              <a
-                className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors duration-200"
-                href="#"
-              >
-                Find Jobs
-              </a>
-              <a
-                className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors duration-200"
-                href="#"
-              >
-                Companies
-              </a>
-              <a
-                className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors duration-200"
-                href="#"
-              >
-                About
-              </a>
-            </nav>
-          </div>
-          <div className="flex items-center gap-6">
-            <button
-              className="material-symbols-outlined text-slate-500 hover:text-primary transition-colors duration-200"
-              data-icon="notifications"
-            >
-              notifications
-            </button>
-            <div className="flex items-center gap-3 pl-4 border-l border-outline-variant/20">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-semibold text-primary leading-none">
-                  Alex Rivera
-                </p>
-              </div>
-              <img
-                alt="User avatar"
-                className="w-10 h-10 rounded-full object-cover border-2 border-primary/10"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuChT0d4U1sSZhgSmej6Xzmuo5F_viH1EVqXLX6fMFpo38yLqNmKtbTS2ns9KElNnTE_S611XmfQ8gIWDLxabg_Ku1nGPXdGgKLAndA_2n9hiAeylSqAccivqFnTzD5teXSQQQJLSVQB_fpBVN1NDjn40Ygrw6F2V5mzUyCOnHKqs2Mbxq1jcXNYWOXNRJWX9P4tj75s5Ra-dsrsv_Fq9v2CXW38eKWZkzbN9k_NZTsqSdhDuml-kag0HuMsVI4vPmEl38C9vuQp59M"
-              />
-            </div>
-            <button className="px-5 py-2.5 text-sm font-semibold text-primary dark:text-blue-100 border border-primary dark:border-blue-400 rounded-lg hover:bg-primary/5 transition-all duration-200">
-              Find Candidates
-            </button>
-          </div>
-        </div>
-      </header>
+      <Navbar />
       <main className="max-w-200 mx-auto px-6 py-12 pt-32">
         {/* Editorial Header  */}
         <div className="mb-12">
@@ -61,28 +340,36 @@ const CandidateProfile = () => {
             Account Settings
           </span>
           <h1 className="text-5xl font-extrabold tracking-tight text-primary leading-tight">
-            Profile
+            My Profile
           </h1>
           <p className="text-secondary text-lg mt-4 max-w-2xl leading-relaxed">
-            Curate your professional identity. High-quality profiles receive 3x
-            more engagement from top-tier employers.
+            Keep your profile up to date so recruiters can evaluate your fit
+            quickly.
           </p>
         </div>
-        {/* Single Column Stack  */}
-        <div className="space-y-10">
-          {/* Personal Information Card  */}
+        <form className="space-y-10" onSubmit={handleSaveProfile}>
           <section className="bg-surface-container-lowest p-8 lg:p-12 rounded-xl">
             <div className="flex items-center gap-3 mb-10">
-              <span
-                className="material-symbols-outlined text-primary text-3xl"
-                data-icon="person"
-              >
+              <span className="material-symbols-outlined text-primary text-3xl">
                 person
               </span>
               <h2 className="text-2xl font-bold text-primary">
                 Personal Information
               </h2>
             </div>
+
+            {error && (
+              <div className="mb-6 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="mb-6 rounded-xl border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-700">
+                {success}
+              </div>
+            )}
+
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
@@ -93,252 +380,166 @@ const CandidateProfile = () => {
                     className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-fixed transition-all outline-none"
                     placeholder="Enter your full name"
                     type="text"
-                    value="Alexander Sterling"
+                    value={draftProfile.full_name}
+                    onChange={(event) =>
+                      setDraftProfile((prev) => ({
+                        ...prev,
+                        full_name: event.target.value,
+                      }))
+                    }
                   />
                 </div>
+
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold tracking-widest text-secondary uppercase px-1">
                     Phone Number
                   </label>
                   <input
                     className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-fixed transition-all outline-none"
-                    placeholder="+1 (000) 000-0000"
+                    placeholder="Enter your phone number"
                     type="tel"
-                    value="+1 (555) 902-4823"
+                    value={draftProfile.phone}
+                    onChange={(event) =>
+                      setDraftProfile((prev) => ({
+                        ...prev,
+                        phone: event.target.value,
+                      }))
+                    }
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold tracking-widest text-secondary uppercase px-1">
-                  Email Address
-                </label>
-                <input
-                  className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-fixed transition-all outline-none"
-                  placeholder="email@example.com"
-                  type="email"
-                  value="alex.sterling@design.co"
-                />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold tracking-widest text-secondary uppercase px-1">
+                    Email Address
+                  </label>
+                  <input
+                    className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 text-secondary outline-none"
+                    type="email"
+                    value={draftProfile.email}
+                    readOnly
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold tracking-widest text-secondary uppercase px-1">
+                    City
+                  </label>
+                  <select
+                    className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-fixed transition-all outline-none"
+                    value={draftProfile.city_id}
+                    onChange={(event) =>
+                      setDraftProfile((prev) => ({
+                        ...prev,
+                        city_id: Number(event.target.value),
+                      }))
+                    }
+                  >
+                    <option value={0}>Select your city</option>
+                    {cities.map((city) => (
+                      <option key={city.city_id} value={city.city_id}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
           </section>
-          {/* Skills Management Card  */}
-          <section className="bg-surface-container-lowest p-8 lg:p-12 rounded-xl">
-            <div className="flex items-center justify-between mb-10">
-              <div className="flex items-center gap-3">
-                <span
-                  className="material-symbols-outlined text-primary text-3xl"
-                  data-icon="auto_awesome"
-                >
-                  auto_awesome
-                </span>
-                <h2 className="text-2xl font-bold text-primary">Skills</h2>
-              </div>
-              <button className="text-primary font-bold text-sm hover:underline">
-                + Add New
-              </button>
-            </div>
-            <p className="text-secondary text-sm -mt-6 mb-8">
-              Communicate your fit for new opportunities
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <div className="group flex items-center gap-2 bg-secondary-fixed-dim/30 text-on-secondary-fixed px-5 py-2.5 rounded-full text-xs font-bold tracking-wide border border-transparent hover:border-outline-variant/20 transition-all cursor-default">
-                UI DESIGN
-                <span
-                  className="material-symbols-outlined text-sm cursor-pointer opacity-40 group-hover:opacity-100 transition-opacity"
-                  data-icon="close"
-                >
-                  close
-                </span>
-              </div>
-              <div className="group flex items-center gap-2 bg-secondary-fixed-dim/30 text-on-secondary-fixed px-5 py-2.5 rounded-full text-xs font-bold tracking-wide border border-transparent hover:border-outline-variant/20 transition-all cursor-default">
-                REACT
-                <span
-                  className="material-symbols-outlined text-sm cursor-pointer opacity-40 group-hover:opacity-100 transition-opacity"
-                  data-icon="close"
-                >
-                  close
-                </span>
-              </div>
-              <div className="group flex items-center gap-2 bg-secondary-fixed-dim/30 text-on-secondary-fixed px-5 py-2.5 rounded-full text-xs font-bold tracking-wide border border-transparent hover:border-outline-variant/20 transition-all cursor-default">
-                FIGMA
-                <span
-                  className="material-symbols-outlined text-sm cursor-pointer opacity-40 group-hover:opacity-100 transition-opacity"
-                  data-icon="close"
-                >
-                  close
-                </span>
-              </div>
-              <div className="group flex items-center gap-2 bg-secondary-fixed-dim/30 text-on-secondary-fixed px-5 py-2.5 rounded-full text-xs font-bold tracking-wide border border-transparent hover:border-outline-variant/20 transition-all cursor-default">
-                TYPESCRIPT
-                <span
-                  className="material-symbols-outlined text-sm cursor-pointer opacity-40 group-hover:opacity-100 transition-opacity"
-                  data-icon="close"
-                >
-                  close
-                </span>
-              </div>
-              <div className="group flex items-center gap-2 bg-secondary-fixed-dim/30 text-on-secondary-fixed px-5 py-2.5 rounded-full text-xs font-bold tracking-wide border border-transparent hover:border-outline-variant/20 transition-all cursor-default">
-                PRODUCT STRATEGY
-                <span
-                  className="material-symbols-outlined text-sm cursor-pointer opacity-40 group-hover:opacity-100 transition-opacity"
-                  data-icon="close"
-                >
-                  close
-                </span>
-              </div>
-            </div>
-          </section>
-          {/* Resume Upload Card  */}
+
           <section className="bg-surface-container-lowest p-8 lg:p-12 rounded-xl">
             <div className="flex items-center gap-3 mb-10">
-              <span
-                className="material-symbols-outlined text-primary text-3xl"
-                data-icon="upload_file"
-              >
-                upload_file
+              <span className="material-symbols-outlined text-primary text-3xl">
+                auto_awesome
               </span>
-              <h2 className="text-2xl font-bold text-primary">Resume / CV</h2>
+              <h2 className="text-2xl font-bold text-primary">Skills</h2>
             </div>
-            <div className="border-2 border-dashed border-outline-variant/30 rounded-xl p-10 flex flex-col items-center justify-center text-center bg-surface-container-low/30 hover:bg-surface-container-low/60 transition-all cursor-pointer">
-              <div className="w-16 h-16 bg-primary-fixed rounded-full flex items-center justify-center mb-6">
-                <span
-                  className="material-symbols-outlined text-primary text-2xl"
-                  data-icon="cloud_upload"
-                >
-                  cloud_upload
-                </span>
-              </div>
-              <p className="text-primary font-bold text-lg">
-                Click to update your resume
-              </p>
-              <p className="text-secondary text-sm mt-2">
-                Support for PDF and DOCX (Max 5MB)
-              </p>
+
+            <p className="text-secondary text-sm -mt-6 mb-5">
+              Tell recruiters what you can do best.
+            </p>
+
+            <div className="relative mb-5">
+              <input
+                className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-fixed transition-all outline-none"
+                placeholder="Search or type a skill and press Enter"
+                type="text"
+                value={skillInput}
+                onChange={(event) => setSkillInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    handleAddSkill();
+                  }
+                }}
+              />
+
+              {skillInput.trim() && availableSkillOptions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-outline-variant/20 rounded-xl shadow-lg z-50 py-2 max-h-60 overflow-y-auto">
+                  {availableSkillOptions.map((option) => (
+                    <button
+                      key={option.skill_id}
+                      className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors"
+                      type="button"
+                      onClick={() => handleSelectSkill(option.name)}
+                    >
+                      {option.name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-            <div className="mt-8 flex items-center gap-4 bg-surface-container-low p-5 rounded-xl border border-outline-variant/10">
-              <div className="w-10 h-10 bg-primary/10 rounded flex items-center justify-center">
-                <span
-                  className="material-symbols-outlined text-primary"
-                  data-icon="description"
-                >
-                  description
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-primary truncate">
-                  Sterling_Resume_2024_v2.pdf
-                </p>
-                <p className="text-[10px] text-secondary font-bold uppercase tracking-wider mt-0.5">
-                  Updated 4 days ago
-                </p>
-              </div>
-              <button
-                className="material-symbols-outlined text-secondary hover:text-error transition-colors"
-                data-icon="delete"
-              >
-                delete
-              </button>
+
+            {isLoadingSkills && skillInput.trim() && (
+              <p className="text-xs text-secondary mb-4">Searching skills...</p>
+            )}
+
+            <div className="flex flex-wrap gap-3">
+              {draftProfile.skills.length > 0 ? (
+                draftProfile.skills.map((skill) => (
+                  <div
+                    key={skill}
+                    className="group flex items-center gap-2 bg-secondary-fixed-dim/30 text-on-secondary-fixed px-5 py-2.5 rounded-full text-xs font-bold tracking-wide border border-transparent hover:border-outline-variant/20 transition-all cursor-default"
+                  >
+                    {skill}
+                    <button
+                      className="material-symbols-outlined text-sm cursor-pointer opacity-40 group-hover:opacity-100 transition-opacity"
+                      type="button"
+                      onClick={() => handleRemoveSkill(skill)}
+                    >
+                      close
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-secondary">No skills added yet.</p>
+              )}
             </div>
           </section>
-          {/* Action Buttons  */}
+
           <div className="flex flex-col md:flex-row gap-4 pt-4">
-            <button className="flex-1 bg-primary text-on-primary py-4 rounded-xl font-bold text-sm tracking-widest uppercase shadow-xl shadow-primary/10 hover:opacity-90 active:scale-95 transition-all">
-              Save Changes
+            <button
+              className="flex-1 bg-primary text-on-primary py-4 rounded-xl font-bold text-sm tracking-widest uppercase shadow-xl shadow-primary/10 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50"
+              type="submit"
+              disabled={isSaving}
+            >
+              {isSaving ? "Saving..." : "Save Changes"}
             </button>
-            <button className="flex-1 bg-surface-container-highest text-primary py-4 rounded-xl font-bold text-sm tracking-widest uppercase hover:bg-surface-container-high active:scale-95 transition-all">
+            <button
+              className="flex-1 bg-surface-container-highest text-primary py-4 rounded-xl font-bold text-sm tracking-widest uppercase hover:bg-surface-container-high active:scale-95 transition-all"
+              type="button"
+              onClick={handleDiscard}
+              disabled={isSaving}
+            >
               Cancel
             </button>
           </div>
-        </div>
+        </form>
       </main>
       {/* Footer  */}
-      <footer className="bg-[#f7f9fb] dark:bg-slate-950 w-full mt-24 border-t border-outline-variant/15">
-        <div className="max-w-360 mx-auto px-12 py-12 flex flex-col gap-12">
-          <div className="flex flex-row justify-between items-start">
-            <div className="flex flex-col gap-4">
-              <span className="text-2xl font-bold tracking-tighter text-primary dark:text-white">
-                JobNest
-              </span>
-              <p className="font-manrope text-sm text-secondary dark:text-slate-400 max-w-xs">
-                Curating the future of professional work with intelligence and
-                serenity.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-16">
-              <div className="flex flex-col gap-4">
-                <span className="font-bold text-primary dark:text-white text-sm uppercase tracking-widest">
-                  Platform
-                </span>
-                <a
-                  className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 transition-colors text-sm"
-                  href="#"
-                >
-                  Find Jobs
-                </a>
-                <a
-                  className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 transition-colors text-sm"
-                  href="#"
-                >
-                  Companies
-                </a>
-              </div>
-              <div className="flex flex-col gap-4">
-                <span className="font-bold text-primary dark:text-white text-sm uppercase tracking-widest">
-                  Employers
-                </span>
-                <a
-                  className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 transition-colors text-sm"
-                  href="#"
-                >
-                  Post a Job
-                </a>
-                <a
-                  className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 transition-colors text-sm"
-                  href="#"
-                >
-                  Hiring Solutions
-                </a>
-              </div>
-              <div className="flex flex-col gap-4">
-                <span className="font-bold text-primary dark:text-white text-sm uppercase tracking-widest">
-                  Legal
-                </span>
-                <a
-                  className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 transition-colors text-sm"
-                  href="#"
-                >
-                  Privacy Policy
-                </a>
-                <a
-                  className="text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 transition-colors text-sm"
-                  href="#"
-                >
-                  Terms of Service
-                </a>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-row justify-between items-center pt-10 border-t border-slate-200/50 dark:border-slate-800/50 font-manrope text-sm tracking-wide">
-            <p className="text-secondary dark:text-slate-400">
-              © 2024 JobNest. Curated with Serene Intelligence.
-            </p>
-            <div className="flex gap-8">
-              <a
-                className="text-secondary dark:text-slate-500 hover:text-primary dark:hover:text-white transition-all duration-300"
-                href="#"
-              >
-                Support
-              </a>
-              <a
-                className="text-secondary dark:text-slate-500 hover:text-primary dark:hover:text-white transition-all duration-300"
-                href="#"
-              >
-                Contact Us
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
+
+      <Footer />
     </div>
   );
 };
