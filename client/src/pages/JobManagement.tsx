@@ -293,9 +293,13 @@ const JobManagement = () => {
                             </span>
                           </div>
                           <div>
-                            <div className="font-bold text-primary">
+                            <button
+                              type="button"
+                              className="font-bold text-primary hover:text-surface-tint transition-colors text-left cursor-pointer"
+                              onClick={() => navigate(`/jobs/${job.job_id}`)}
+                            >
                               {job.title}
-                            </div>
+                            </button>
                             <div className="text-xs text-secondary">
                               {job.location} • {job.category}
                             </div>

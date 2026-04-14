@@ -3,6 +3,7 @@ import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import Footer from "../layouts/Footer";
 import Navbar from "../layouts/Navbar";
+import RichTextEditor from "../components/RichTextEditor";
 
 type StoredUser = {
   user_id?: number;
@@ -66,6 +67,45 @@ const formatCurrencyInput = (value: string) => {
   }
 
   return Number(normalizedValue).toLocaleString("vi-VN");
+};
+
+const normalizeEditorHtmlForStorage = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed === "<p><br></p>") {
+    return "";
+  }
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(trimmed, "text/html");
+
+  doc.querySelectorAll("ol").forEach((ol) => {
+    const listItems = Array.from(ol.children).filter(
+      (node): node is HTMLLIElement => node.tagName.toLowerCase() === "li",
+    );
+
+    if (listItems.length === 0) {
+      return;
+    }
+
+    const isPureBulletList = listItems.every(
+      (item) => item.getAttribute("data-list") === "bullet",
+    );
+
+    listItems.forEach((item) => {
+      const dataList = item.getAttribute("data-list");
+      if (dataList === "bullet" || dataList === "ordered") {
+        item.removeAttribute("data-list");
+      }
+    });
+
+    if (isPureBulletList) {
+      const ul = doc.createElement("ul");
+      ul.innerHTML = ol.innerHTML;
+      ol.replaceWith(ul);
+    }
+  });
+
+  return doc.body.innerHTML.trim();
 };
 
 const JobPost = () => {
@@ -341,11 +381,11 @@ const JobPost = () => {
           body: JSON.stringify({
             title: formData.title.trim(),
             category_id: Number(formData.categoryId),
-            description: formData.description.trim(),
-            requirements: formData.requirements.trim(),
+            description: normalizeEditorHtmlForStorage(formData.description),
+            requirements: normalizeEditorHtmlForStorage(formData.requirements),
             salary_min: salaryMin,
             salary_max: salaryMax,
-            benefits: formData.benefits.trim(),
+            benefits: normalizeEditorHtmlForStorage(formData.benefits),
             expiration_date: expirationDateIso,
             skills,
           }),
@@ -394,7 +434,7 @@ const JobPost = () => {
                   Title
                 </label>
                 <input
-                  className="w-full bg-surface-container-highest border-none rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary-fixed focus:bg-white transition-all text-on-surface placeholder:text-outline/50"
+                  className="w-full bg-white border border-gray-300 rounded-xl px-5 py-4 outline-none focus:border-black transition-all text-on-surface placeholder:text-outline/50"
                   name="title"
                   placeholder="e.g. Senior Product Designer"
                   type="text"
@@ -408,7 +448,7 @@ const JobPost = () => {
                 </label>
                 <div className="relative">
                   <select
-                    className="w-full bg-surface-container-highest border-none rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary-fixed focus:bg-white transition-all appearance-none text-on-surface"
+                    className="w-full bg-white border border-gray-300 rounded-xl px-5 py-4 outline-none focus:border-black transition-all appearance-none text-on-surface"
                     name="categoryId"
                     value={formData.categoryId}
                     onChange={handleInputChange}
@@ -439,31 +479,33 @@ const JobPost = () => {
                 <label className="block text-[10px] uppercase font-bold tracking-widest text-on-surface-variant">
                   Description
                 </label>
-                <div className="rounded-xl overflow-hidden bg-surface-container-highest">
-                  <textarea
-                    className="w-full bg-transparent border-none px-5 py-4 focus:ring-0 text-on-surface placeholder:text-outline/50 resize-none"
-                    name="description"
-                    placeholder="Describe the role and day-to-day responsibilities..."
-                    rows={6}
-                    value={formData.description}
-                    onChange={handleInputChange}
-                  ></textarea>
-                </div>
+                <RichTextEditor
+                  value={formData.description}
+                  onChange={(nextValue) =>
+                    setFormData((current) => ({
+                      ...current,
+                      description: nextValue,
+                    }))
+                  }
+                  placeholder="Describe the role and day-to-day responsibilities..."
+                  heightClassName="h-80"
+                />
               </div>
               <div className="space-y-2">
                 <label className="block text-[10px] uppercase font-bold tracking-widest text-on-surface-variant">
                   Requirements
                 </label>
-                <div className="rounded-xl overflow-hidden bg-surface-container-highest">
-                  <textarea
-                    className="w-full bg-transparent border-none px-5 py-4 focus:ring-0 text-on-surface placeholder:text-outline/50 resize-none"
-                    name="requirements"
-                    placeholder="List core qualifications and skills..."
-                    rows={4}
-                    value={formData.requirements}
-                    onChange={handleInputChange}
-                  ></textarea>
-                </div>
+                <RichTextEditor
+                  value={formData.requirements}
+                  onChange={(nextValue) =>
+                    setFormData((current) => ({
+                      ...current,
+                      requirements: nextValue,
+                    }))
+                  }
+                  placeholder="List core qualifications and skills..."
+                  heightClassName="h-65"
+                />
               </div>
             </div>
             {/* Required Skills Section  */}
@@ -474,7 +516,7 @@ const JobPost = () => {
               <div className="space-y-4">
                 <div className="relative">
                   <input
-                    className="w-full bg-surface-container-highest border-none rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary-fixed focus:bg-white transition-all text-on-surface placeholder:text-outline/50"
+                    className="w-full bg-white border border-gray-300 rounded-xl px-5 py-4 outline-none focus:border-black transition-all text-on-surface placeholder:text-outline/50"
                     placeholder="Search skills ..."
                     type="text"
                     value={skillInput}
@@ -493,7 +535,7 @@ const JobPost = () => {
                     Add
                   </button>
                   {showSkillOptions && skillInput.trim() && (
-                    <div className="absolute z-20 mt-2 w-full rounded-xl border border-outline-variant/20 bg-white shadow-lg overflow-hidden">
+                    <div className="absolute z-20 mt-2 w-full rounded-xl border border-gray-300 bg-white shadow-lg overflow-hidden">
                       {isLoadingSkills ? (
                         <div className="px-4 py-3 text-sm text-secondary">
                           Searching skills...
@@ -508,7 +550,7 @@ const JobPost = () => {
                             <li key={option.skill_id}>
                               <button
                                 type="button"
-                                className="w-full text-left px-4 py-3 text-sm text-on-surface hover:bg-surface-container-low transition-colors"
+                                className="w-full text-left px-4 py-3 text-sm text-on-surface hover:bg-gray-50 transition-colors"
                                 onMouseDown={(event) => event.preventDefault()}
                                 onClick={() => handleSelectSkill(option.name)}
                               >
@@ -553,7 +595,7 @@ const JobPost = () => {
                     VND
                   </span>
                   <input
-                    className="w-full bg-surface-container-highest border-none rounded-xl px-5 pr-16 py-4 focus:ring-2 focus:ring-primary-fixed focus:bg-white transition-all"
+                    className="w-full bg-white border border-gray-300 rounded-xl px-5 pr-16 py-4 outline-none focus:border-black transition-all"
                     name="salaryMin"
                     placeholder="Min"
                     type="text"
@@ -567,7 +609,7 @@ const JobPost = () => {
                     VND
                   </span>
                   <input
-                    className="w-full bg-surface-container-highest border-none rounded-xl px-5 pr-16 py-4 focus:ring-2 focus:ring-primary-fixed focus:bg-white transition-all"
+                    className="w-full bg-white border border-gray-300 rounded-xl px-5 pr-16 py-4 outline-none focus:border-black transition-all"
                     name="salaryMax"
                     placeholder="Max"
                     type="text"
@@ -583,16 +625,17 @@ const JobPost = () => {
               <label className="block text-[10px] uppercase font-bold tracking-widest text-on-surface-variant">
                 Benefits
               </label>
-              <div className="rounded-xl overflow-hidden bg-surface-container-highest">
-                <textarea
-                  className="w-full bg-transparent border-none px-5 py-4 focus:ring-0 text-on-surface placeholder:text-outline/50 resize-none"
-                  name="benefits"
-                  placeholder="List company perks, healthcare, or other advantages..."
-                  rows={4}
-                  value={formData.benefits}
-                  onChange={handleInputChange}
-                ></textarea>
-              </div>
+              <RichTextEditor
+                value={formData.benefits}
+                onChange={(nextValue) =>
+                  setFormData((current) => ({
+                    ...current,
+                    benefits: nextValue,
+                  }))
+                }
+                placeholder="List company perks, healthcare, or other advantages..."
+                heightClassName="h-65"
+              />
             </div>
             <div className="space-y-4">
               <label className="block text-[10px] uppercase font-bold tracking-widest text-on-surface-variant">
@@ -602,7 +645,7 @@ const JobPost = () => {
                 <div className="space-y-1">
                   <div className="relative">
                     <input
-                      className="w-full bg-surface-container-highest border-none rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary-fixed focus:bg-white transition-all text-on-surface"
+                      className="w-full bg-white border border-gray-300 rounded-xl px-5 py-4 outline-none focus:border-black transition-all text-on-surface"
                       name="expirationDate"
                       type="text"
                       inputMode="numeric"

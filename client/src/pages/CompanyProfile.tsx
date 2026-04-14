@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Footer from "../layouts/Footer";
 import Navbar from "../layouts/Navbar";
+import RichTextEditor from "../components/RichTextEditor";
 
 type StoredUser = {
   user_id?: number;
@@ -467,23 +468,19 @@ const CompanyProfile = () => {
                     Description
                   </label>
                 </div>
-                <textarea
-                  className={getFieldControlClass(
-                    editingSection,
-                    "description",
-                    "min-h-36",
-                  )}
-                  value={draftProfile.description}
-                  onClick={(e) => e.stopPropagation()}
-                  onFocus={() => setEditingSection("description")}
-                  onChange={(e) =>
-                    setDraftProfile((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
-                  placeholder="Company description"
-                />
+                <div onClick={(e) => e.stopPropagation()}>
+                  <RichTextEditor
+                    value={draftProfile.description}
+                    onChange={(nextValue) =>
+                      setDraftProfile((prev) => ({
+                        ...prev,
+                        description: nextValue,
+                      }))
+                    }
+                    placeholder="Company description"
+                    heightClassName="h-[280px]"
+                  />
+                </div>
               </div>
 
               <div className="pt-6 flex flex-col md:flex-row justify-between items-center gap-4">

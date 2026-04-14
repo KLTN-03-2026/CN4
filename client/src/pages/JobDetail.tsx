@@ -17,15 +17,37 @@ type JobDetailData = {
   skills: string[];
 };
 
-const splitTextToList = (value: string | null | undefined): string[] => {
+const sanitizeHtml = (value: string | null | undefined): string => {
   if (!value) {
-    return [];
+    return "";
   }
 
-  return value
-    .split(/\r?\n|\.|;/)
-    .map((item) => item.trim())
-    .filter(Boolean);
+  const parser = new DOMParser();
+  const document = parser.parseFromString(value, "text/html");
+
+  const unsafeNodes = document.querySelectorAll(
+    "script, style, iframe, object, embed, link, meta",
+  );
+  unsafeNodes.forEach((node) => node.remove());
+
+  const allElements = document.body.querySelectorAll("*");
+  allElements.forEach((element) => {
+    Array.from(element.attributes).forEach((attribute) => {
+      const attributeName = attribute.name.toLowerCase();
+      const attributeValue = attribute.value.toLowerCase();
+
+      if (
+        attributeName.startsWith("on") ||
+        (attributeName === "href" &&
+          attributeValue.startsWith("javascript:")) ||
+        (attributeName === "src" && attributeValue.startsWith("javascript:"))
+      ) {
+        element.removeAttribute(attribute.name);
+      }
+    });
+  });
+
+  return document.body.innerHTML;
 };
 
 const getPostedLabel = (createdAt: string) => {
@@ -90,15 +112,23 @@ const JobDetail = () => {
     fetchJob();
   }, [jobId]);
 
-  const requirements = useMemo(
-    () => splitTextToList(job?.requirements),
+  const descriptionHtml = useMemo(
+    () => sanitizeHtml(job?.description),
+    [job?.description],
+  );
+
+  const requirementsHtml = useMemo(
+    () => sanitizeHtml(job?.requirements),
     [job?.requirements],
   );
 
-  const benefits = useMemo(
-    () => splitTextToList(job?.benefits),
+  const benefitsHtml = useMemo(
+    () => sanitizeHtml(job?.benefits),
     [job?.benefits],
   );
+
+  const descriptionContentClassName =
+    "mb-8 text-lg leading-8 text-on-surface-variant [&_h1]:text-lg [&_h1]:font-semibold [&_h1]:tracking-normal [&_h1]:text-secondary [&_h1]:mb-4 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:tracking-normal [&_h2]:text-secondary [&_h2]:mb-4 [&_h2]:mt-8 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-secondary [&_h3]:mb-4 [&_h3]:mt-7 [&_p]:mb-4 [&_p]:text-lg [&_p]:leading-8 [&_p]:text-on-surface-variant [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ul]:marker:text-primary [&_ul_li]:mb-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_ol]:marker:text-primary [&_ol_li]:mb-2 [&_li]:mb-2 [&_a]:text-primary [&_a]:font-semibold [&_a]:underline [&_a:hover]:text-surface-tint [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:py-1 [&_blockquote]:italic [&_blockquote]:text-secondary [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:bg-surface-container-low [&_code]:text-primary [&_pre]:p-4 [&_pre]:rounded-xl [&_pre]:bg-surface-container-low [&_pre]:overflow-x-auto";
 
   return (
     <div className="bg-surface font-body text-on-surface min-h-screen flex flex-col">
@@ -147,29 +177,27 @@ const JobDetail = () => {
                   <h2 className="text-2xl font-bold text-primary mb-6">
                     About the Role
                   </h2>
-                  <p className="text-lg leading-relaxed text-on-surface-variant mb-8">
-                    {job.description || "No description provided."}
-                  </p>
+                  {descriptionHtml ? (
+                    <div
+                      className={descriptionContentClassName}
+                      dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                    />
+                  ) : (
+                    <p className="text-lg leading-relaxed text-on-surface-variant mb-8">
+                      No description provided.
+                    </p>
+                  )}
 
                   <h3 className="text-xl font-bold text-primary mb-6 mt-12">
                     What We Are Looking For
                   </h3>
-                  {requirements.length > 0 ? (
-                    <ul className="space-y-4 text-on-surface-variant list-none p-0">
-                      {requirements.map((item, index) => (
-                        <li key={`${item}-${index}`} className="flex gap-4">
-                          <span
-                            className="material-symbols-outlined text-primary-container shrink-0"
-                            style={{ fontVariationSettings: "FILL 1" }}
-                          >
-                            check_circle
-                          </span>
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
+                  {requirementsHtml ? (
+                    <div
+                      className={descriptionContentClassName}
+                      dangerouslySetInnerHTML={{ __html: requirementsHtml }}
+                    />
                   ) : (
-                    <p className="text-on-surface-variant">
+                    <p className="text-lg leading-relaxed text-on-surface-variant mb-8">
                       No requirements listed.
                     </p>
                   )}
@@ -179,22 +207,13 @@ const JobDetail = () => {
                   <h3 className="text-xl font-bold text-primary mb-6 mt-12">
                     Benefits
                   </h3>
-                  {benefits.length > 0 ? (
-                    <ul className="space-y-4 text-on-surface-variant list-none p-0">
-                      {benefits.map((item, index) => (
-                        <li key={`${item}-${index}`} className="flex gap-4">
-                          <span
-                            className="material-symbols-outlined text-primary-container shrink-0"
-                            style={{ fontVariationSettings: "FILL 1" }}
-                          >
-                            check_circle
-                          </span>
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
+                  {benefitsHtml ? (
+                    <div
+                      className={descriptionContentClassName}
+                      dangerouslySetInnerHTML={{ __html: benefitsHtml }}
+                    />
                   ) : (
-                    <p className="text-on-surface-variant">
+                    <p className="text-lg leading-relaxed text-on-surface-variant mb-8">
                       No benefits listed.
                     </p>
                   )}

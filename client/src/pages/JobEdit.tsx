@@ -3,6 +3,7 @@ import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Footer from "../layouts/Footer";
 import Navbar from "../layouts/Navbar";
+import RichTextEditor from "../components/RichTextEditor";
 
 type StoredUser = {
   user_id?: number;
@@ -81,6 +82,47 @@ const formatCurrencyInput = (value: string) => {
   return Number(normalizedValue).toLocaleString("vi-VN");
 };
 
+const normalizeEditorHtmlForStorage = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed === "<p><br></p>") {
+    return "";
+  }
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(trimmed, "text/html");
+
+  // Quill can output lists as <ol><li data-list="bullet">...</li></ol>.
+  // Convert pure bullet groups to semantic <ul> so DB stores expected markup.
+  doc.querySelectorAll("ol").forEach((ol) => {
+    const listItems = Array.from(ol.children).filter(
+      (node): node is HTMLLIElement => node.tagName.toLowerCase() === "li",
+    );
+
+    if (listItems.length === 0) {
+      return;
+    }
+
+    const isPureBulletList = listItems.every(
+      (item) => item.getAttribute("data-list") === "bullet",
+    );
+
+    listItems.forEach((item) => {
+      const dataList = item.getAttribute("data-list");
+      if (dataList === "bullet" || dataList === "ordered") {
+        item.removeAttribute("data-list");
+      }
+    });
+
+    if (isPureBulletList) {
+      const ul = doc.createElement("ul");
+      ul.innerHTML = ol.innerHTML;
+      ol.replaceWith(ul);
+    }
+  });
+
+  return doc.body.innerHTML.trim();
+};
+
 const JobEdit = () => {
   const navigate = useNavigate();
   const { jobId } = useParams<{ jobId: string }>();
@@ -106,6 +148,7 @@ const JobEdit = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [headingTitle, setHeadingTitle] = useState("Job");
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [skillInput, setSkillInput] = useState("");
@@ -172,6 +215,7 @@ const JobEdit = () => {
         }
 
         const job = data.job;
+        setHeadingTitle(job.title || "Job");
         setFormData({
           title: job.title || "",
           categoryId: String(job.category_id || ""),
@@ -400,11 +444,11 @@ const JobEdit = () => {
           body: JSON.stringify({
             title: formData.title.trim(),
             category_id: Number(formData.categoryId),
-            description: formData.description.trim(),
-            requirements: formData.requirements.trim(),
+            description: normalizeEditorHtmlForStorage(formData.description),
+            requirements: normalizeEditorHtmlForStorage(formData.requirements),
             salary_min: salaryMin,
             salary_max: salaryMax,
-            benefits: formData.benefits.trim(),
+            benefits: normalizeEditorHtmlForStorage(formData.benefits),
             expiration_date: expirationDateIso,
             skills,
           }),
@@ -435,7 +479,7 @@ const JobEdit = () => {
       <main className="max-w-4xl mx-auto px-6 py-16 w-full grow">
         <div className="mb-12">
           <h1 className="text-[3.5rem] font-extrabold tracking-tight text-primary leading-tight mb-4">
-            Edit {formData.title || "Job"}
+            Edit {headingTitle}
           </h1>
           <p className="text-secondary text-lg max-w-2xl leading-relaxed">
             Update the job information and save changes.
@@ -455,7 +499,7 @@ const JobEdit = () => {
                     Job Title
                   </label>
                   <input
-                    className="w-full bg-surface-container-highest border-none rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary-fixed focus:bg-white transition-all text-on-surface placeholder:text-outline/50"
+                    className="w-full bg-white border border-gray-300 rounded-xl px-5 py-4 outline-none focus:border-black transition-all text-on-surface placeholder:text-outline/50"
                     name="title"
                     type="text"
                     value={formData.title}
@@ -468,7 +512,7 @@ const JobEdit = () => {
                   </label>
                   <div className="relative">
                     <select
-                      className="w-full bg-surface-container-highest border-none rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary-fixed focus:bg-white transition-all appearance-none text-on-surface"
+                      className="w-full bg-white border border-gray-300 rounded-xl px-5 py-4 outline-none focus:border-black transition-all appearance-none text-on-surface"
                       name="categoryId"
                       value={formData.categoryId}
                       onChange={handleInputChange}
@@ -499,29 +543,33 @@ const JobEdit = () => {
                   <label className="block text-[10px] uppercase font-bold tracking-widest text-on-surface-variant">
                     Job Description
                   </label>
-                  <div className="rounded-xl overflow-hidden bg-surface-container-highest">
-                    <textarea
-                      className="w-full bg-transparent border-none px-5 py-4 focus:ring-0 text-on-surface placeholder:text-outline/50 resize-none"
-                      name="description"
-                      rows={6}
-                      value={formData.description}
-                      onChange={handleInputChange}
-                    ></textarea>
-                  </div>
+                  <RichTextEditor
+                    value={formData.description}
+                    onChange={(nextValue) =>
+                      setFormData((current) => ({
+                        ...current,
+                        description: nextValue,
+                      }))
+                    }
+                    placeholder="Write job description"
+                    heightClassName="h-80"
+                  />
                 </div>
                 <div className="space-y-2">
                   <label className="block text-[10px] uppercase font-bold tracking-widest text-on-surface-variant">
                     Requirements
                   </label>
-                  <div className="rounded-xl overflow-hidden bg-surface-container-highest">
-                    <textarea
-                      className="w-full bg-transparent border-none px-5 py-4 focus:ring-0 text-on-surface placeholder:text-outline/50 resize-none"
-                      name="requirements"
-                      rows={4}
-                      value={formData.requirements}
-                      onChange={handleInputChange}
-                    ></textarea>
-                  </div>
+                  <RichTextEditor
+                    value={formData.requirements}
+                    onChange={(nextValue) =>
+                      setFormData((current) => ({
+                        ...current,
+                        requirements: nextValue,
+                      }))
+                    }
+                    placeholder="Write requirements"
+                    heightClassName="h-65"
+                  />
                 </div>
               </div>
 
@@ -532,7 +580,7 @@ const JobEdit = () => {
                 <div className="space-y-4">
                   <div className="relative">
                     <input
-                      className="w-full bg-surface-container-highest border-none rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary-fixed focus:bg-white transition-all text-on-surface placeholder:text-outline/50"
+                      className="w-full bg-white border border-gray-300 rounded-xl px-5 py-4 outline-none focus:border-black transition-all text-on-surface placeholder:text-outline/50"
                       placeholder="Search skills ..."
                       type="text"
                       value={skillInput}
@@ -551,7 +599,7 @@ const JobEdit = () => {
                       Add
                     </button>
                     {showSkillOptions && skillInput.trim() && (
-                      <div className="absolute z-20 mt-2 w-full rounded-xl border border-outline-variant/20 bg-white shadow-lg overflow-hidden">
+                      <div className="absolute z-20 mt-2 w-full rounded-xl border border-gray-300 bg-white shadow-lg overflow-hidden">
                         {isLoadingSkills ? (
                           <div className="px-4 py-3 text-sm text-secondary">
                             Searching skills...
@@ -566,7 +614,7 @@ const JobEdit = () => {
                               <li key={option.skill_id}>
                                 <button
                                   type="button"
-                                  className="w-full text-left px-4 py-3 text-sm text-on-surface hover:bg-surface-container-low transition-colors"
+                                  className="w-full text-left px-4 py-3 text-sm text-on-surface hover:bg-gray-50 transition-colors"
                                   onMouseDown={(event) =>
                                     event.preventDefault()
                                   }
@@ -613,7 +661,7 @@ const JobEdit = () => {
                       VND
                     </span>
                     <input
-                      className="w-full bg-surface-container-highest border-none rounded-xl px-5 pr-16 py-4 focus:ring-2 focus:ring-primary-fixed focus:bg-white transition-all"
+                      className="w-full bg-white border border-gray-300 rounded-xl px-5 pr-16 py-4 outline-none focus:border-black transition-all"
                       name="salaryMin"
                       type="text"
                       inputMode="numeric"
@@ -626,7 +674,7 @@ const JobEdit = () => {
                       VND
                     </span>
                     <input
-                      className="w-full bg-surface-container-highest border-none rounded-xl px-5 pr-16 py-4 focus:ring-2 focus:ring-primary-fixed focus:bg-white transition-all"
+                      className="w-full bg-white border border-gray-300 rounded-xl px-5 pr-16 py-4 outline-none focus:border-black transition-all"
                       name="salaryMax"
                       type="text"
                       inputMode="numeric"
@@ -641,15 +689,17 @@ const JobEdit = () => {
                 <label className="block text-[10px] uppercase font-bold tracking-widest text-on-surface-variant">
                   Benefits
                 </label>
-                <div className="rounded-xl overflow-hidden bg-surface-container-highest">
-                  <textarea
-                    className="w-full bg-transparent border-none px-5 py-4 focus:ring-0 text-on-surface placeholder:text-outline/50 resize-none"
-                    name="benefits"
-                    rows={4}
-                    value={formData.benefits}
-                    onChange={handleInputChange}
-                  ></textarea>
-                </div>
+                <RichTextEditor
+                  value={formData.benefits}
+                  onChange={(nextValue) =>
+                    setFormData((current) => ({
+                      ...current,
+                      benefits: nextValue,
+                    }))
+                  }
+                  placeholder="Write benefits"
+                  heightClassName="h-65"
+                />
               </div>
 
               <div className="space-y-4">
@@ -658,7 +708,7 @@ const JobEdit = () => {
                 </label>
                 <div className="relative">
                   <input
-                    className="w-full bg-surface-container-highest border-none rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary-fixed focus:bg-white transition-all text-on-surface"
+                    className="w-full bg-white border border-gray-300 rounded-xl px-5 py-4 outline-none focus:border-black transition-all text-on-surface"
                     name="expirationDate"
                     type="text"
                     inputMode="numeric"
