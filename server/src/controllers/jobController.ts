@@ -130,10 +130,7 @@ function extractAvatarPath(avatarUrl: string): string | null {
   }
 }
 
-function appendVersionParam(
-  avatarUrl: string,
-  updatedAt: Date,
-): string {
+function appendVersionParam(avatarUrl: string, updatedAt: Date): string {
   try {
     const parsed = new URL(avatarUrl);
     parsed.searchParams.set("v", String(updatedAt.getTime()));

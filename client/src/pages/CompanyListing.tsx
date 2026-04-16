@@ -7,6 +7,7 @@ type CompanyListingItem = {
   company_id: number;
   name: string;
   description: string | null;
+  avatar_url: string | null;
   category: string;
   location: string;
   open_roles_count: number;
@@ -187,9 +188,17 @@ const CompanyListing = () => {
               >
                 <div className="flex gap-6 mb-6">
                   <div className="h-24 w-24 rounded-xl border border-slate-100 bg-white flex items-center justify-center shrink-0 shadow-sm overflow-hidden p-2">
-                    <span className="text-3xl font-extrabold text-blue-900">
-                      {company.name.charAt(0).toUpperCase()}
-                    </span>
+                    {company.avatar_url ? (
+                      <img
+                        src={company.avatar_url}
+                        alt={`${company.name} logo`}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-3xl font-extrabold text-blue-900">
+                        {company.name.charAt(0).toUpperCase()}
+                      </span>
+                    )}
                   </div>
                   <div className="grow">
                     <div className="flex justify-between items-start">
