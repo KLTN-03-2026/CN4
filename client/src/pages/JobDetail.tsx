@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import Footer from "../layouts/Footer";
 import Navbar from "../layouts/Navbar";
 
 type JobDetailData = {
   job_id: number;
   title: string;
+  company_id: number;
   company_name: string;
+  company_avatar_url: string | null;
   category: string;
   location: string;
   created_at: string;
@@ -79,6 +81,7 @@ const JobDetail = () => {
   const [job, setJob] = useState<JobDetailData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isCompanyLogoBroken, setIsCompanyLogoBroken] = useState(false);
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -111,6 +114,10 @@ const JobDetail = () => {
 
     fetchJob();
   }, [jobId]);
+
+  useEffect(() => {
+    setIsCompanyLogoBroken(false);
+  }, [job?.company_avatar_url, job?.company_id]);
 
   const descriptionHtml = useMemo(
     () => sanitizeHtml(job?.description),
@@ -159,7 +166,31 @@ const JobDetail = () => {
                 {job.title}
               </h1>
               <div className="flex flex-wrap items-center gap-4 text-secondary font-medium text-lg">
-                <span>{job.company_name}</span>
+                <div className="inline-flex items-center gap-3">
+                  <Link
+                    to={`/companies/${job.company_id}`}
+                    className="h-10 w-10 rounded-lg border border-outline-variant/20 bg-white shadow-sm overflow-hidden flex items-center justify-center cursor-pointer"
+                  >
+                    {job.company_avatar_url && !isCompanyLogoBroken ? (
+                      <img
+                        src={job.company_avatar_url}
+                        alt={`${job.company_name} logo`}
+                        className="h-full w-full object-cover"
+                        onError={() => setIsCompanyLogoBroken(true)}
+                      />
+                    ) : (
+                      <span className="text-base font-extrabold text-blue-900">
+                        {job.company_name.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </Link>
+                  <Link
+                    to={`/companies/${job.company_id}`}
+                    className="hover:text-primary transition-colors cursor-pointer"
+                  >
+                    {job.company_name}
+                  </Link>
+                </div>
                 <span className="w-1.5 h-1.5 rounded-full bg-outline-variant/30"></span>
                 <span>{job.location}</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-outline-variant/30"></span>
@@ -276,10 +307,36 @@ const JobDetail = () => {
                 </div>
 
                 <div className="bg-white p-8 border border-outline-variant/15">
-                  <h4 className="font-bold text-primary">{job.company_name}</h4>
-                  <p className="text-xs text-secondary font-medium uppercase tracking-wider mt-1">
-                    {job.category}
-                  </p>
+                  <div className="flex items-center gap-3">
+                    <Link
+                      to={`/companies/${job.company_id}`}
+                      className="h-12 w-12 rounded-lg border border-outline-variant/20 bg-white shadow-sm overflow-hidden flex items-center justify-center shrink-0"
+                    >
+                      {job.company_avatar_url && !isCompanyLogoBroken ? (
+                        <img
+                          src={job.company_avatar_url}
+                          alt={`${job.company_name} logo`}
+                          className="h-full w-full object-cover"
+                          onError={() => setIsCompanyLogoBroken(true)}
+                        />
+                      ) : (
+                        <span className="text-lg font-extrabold text-blue-900">
+                          {job.company_name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </Link>
+                    <div>
+                      <Link
+                        to={`/companies/${job.company_id}`}
+                        className="font-bold text-primary hover:text-surface-tint transition-colors"
+                      >
+                        {job.company_name}
+                      </Link>
+                      <p className="text-xs text-secondary font-medium uppercase tracking-wider mt-1">
+                        {job.category}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </aside>
             </div>

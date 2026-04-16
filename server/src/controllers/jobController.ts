@@ -250,6 +250,7 @@ export const getPublicJobById = async (req: Request, res: Response) => {
       job: {
         job_id: job.job_id,
         title: job.title,
+        company_id: job.company.company_id,
         company_name: job.company.name,
         company_avatar_url: await formatAvatarUrl(
           job.company.avatar_url,
