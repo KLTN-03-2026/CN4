@@ -85,7 +85,7 @@ const Navbar = () => {
   const displayIdentity =
     isRecruiter && currentCompany?.name
       ? currentCompany.name
-      : currentUser?.full_name || currentUser?.email;
+      : currentUser?.full_name?.trim() || "Candidate";
 
   const clearAuthSession = () => {
     localStorage.removeItem("user");
@@ -168,10 +168,10 @@ const Navbar = () => {
         <div className="flex items-center gap-4">
           {!isRecruiter && (
             <button
-              className="px-5 py-2.5 text-sm font-semibold text-primary dark:text-blue-100 border border-primary dark:border-blue-400 rounded-lg hover:bg-primary/5 transition-all duration-200"
+              className="px-5 py-2.5 text-sm font-semibold text-primary dark:text-blue-100 border border-primary dark:border-blue-400 rounded-lg cursor-pointer hover:bg-primary/10 hover:opacity-80 active:scale-95 transition-all duration-200"
               onClick={handleFindCandidates}
             >
-              Find Candidates
+              For Recruiter
             </button>
           )}
 
@@ -262,13 +262,13 @@ const Navbar = () => {
           ) : (
             <>
               <button
-                className="px-5 py-2.5 text-sm font-medium text-secondary dark:text-slate-400 hover:text-primary dark:hover:text-blue-200 transition-colors"
+                className="px-5 py-2.5 text-sm font-semibold text-primary border border-primary/40 bg-white rounded-lg shadow-sm cursor-pointer hover:border-primary hover:bg-slate-100 hover:opacity-80 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-all duration-200"
                 onClick={() => navigate("/candidate-login")}
               >
                 Login
               </button>
               <button
-                className="px-6 py-2.5 text-sm font-bold bg-primary text-white rounded-lg hover:opacity-80 active:scale-95 transition-all duration-200"
+                className="px-6 py-2.5 text-sm font-bold bg-primary text-white rounded-lg cursor-pointer hover:opacity-80 active:scale-95 transition-all duration-200"
                 onClick={() => navigate("/candidate-signup")}
               >
                 Sign Up
