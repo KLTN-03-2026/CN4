@@ -332,7 +332,6 @@ const CandidateProfile = () => {
   return (
     <div className="bg-surface text-on-surface antialiased">
       {/* TopNavBar Component  */}
-      <Navbar />
       <main className="max-w-200 mx-auto px-6 py-12 pt-32">
         {/* Editorial Header  */}
         <div className="mb-12">
@@ -538,8 +537,6 @@ const CandidateProfile = () => {
         </form>
       </main>
       {/* Footer  */}
-
-      <Footer />
     </div>
   );
 };
