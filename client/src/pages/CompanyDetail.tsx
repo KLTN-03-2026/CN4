@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Footer from "../layouts/Footer";
-import Navbar from "../layouts/Navbar";
 
 type CompanyOpenJob = {
   job_id: number;
@@ -169,220 +167,214 @@ const CompanyDetail = () => {
   }, [companyId]);
 
   return (
-    <div className="bg-surface text-on-surface min-h-screen flex flex-col">
-      <Navbar />
+    <main className="max-w-7xl mx-auto py-12 md:py-20 px-8 w-full text-on-surface">
+      {isLoading ? (
+        <div className="bg-white p-8 rounded-xl border border-outline-variant/15 text-secondary text-center">
+          Loading company details...
+        </div>
+      ) : error || !company ? (
+        <div className="bg-white p-8 rounded-xl border border-red-200 text-center">
+          <p className="text-red-600 mb-4">{error || "Company not found."}</p>
+          <button
+            onClick={() => navigate("/company-listing")}
+            className="bg-primary text-on-primary px-4 py-2 rounded-lg font-bold hover:opacity-90 transition-all"
+          >
+            Back to Company Listing
+          </button>
+        </div>
+      ) : (
+        <>
+          <header className="mb-16 max-w-4xl">
+            <div className="inline-flex items-center px-3 py-1 bg-secondary-fixed-dim text-on-secondary-fixed rounded-full text-[0.7rem] font-bold tracking-widest uppercase mb-6">
+              {company.category}
+            </div>
+            <h1 className="text-5xl md:text-6xl font-extrabold text-primary tracking-tight leading-tight mb-4">
+              {company.name}
+            </h1>
+            <div className="flex flex-wrap items-center gap-4 text-secondary font-medium text-lg">
+              <span>{company.location}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-outline-variant/30"></span>
+              <span className="text-primary font-bold">
+                {company.open_roles_count} Open Roles
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-outline-variant/30"></span>
+              <span>Since {company.since_year}</span>
+            </div>
+          </header>
 
-      <main className="max-w-7xl mx-auto py-12 md:py-20 px-8 grow w-full">
-        {isLoading ? (
-          <div className="bg-white p-8 rounded-xl border border-outline-variant/15 text-secondary text-center">
-            Loading company details...
-          </div>
-        ) : error || !company ? (
-          <div className="bg-white p-8 rounded-xl border border-red-200 text-center">
-            <p className="text-red-600 mb-4">{error || "Company not found."}</p>
-            <button
-              onClick={() => navigate("/company-listing")}
-              className="bg-primary text-on-primary px-4 py-2 rounded-lg font-bold hover:opacity-90 transition-all"
-            >
-              Back to Company Listing
-            </button>
-          </div>
-        ) : (
-          <>
-            <header className="mb-16 max-w-4xl">
-              <div className="inline-flex items-center px-3 py-1 bg-secondary-fixed-dim text-on-secondary-fixed rounded-full text-[0.7rem] font-bold tracking-widest uppercase mb-6">
-                {company.category}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-16 items-start">
+            <section className="space-y-12">
+              <div className="prose prose-slate max-w-none">
+                <h2 className="text-2xl font-bold text-primary mb-6">
+                  About Us
+                </h2>
+                {descriptionHtml ? (
+                  <div
+                    className={descriptionContentClassName}
+                    dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                  />
+                ) : (
+                  <p className="text-lg leading-relaxed text-on-surface-variant">
+                    No company description provided.
+                  </p>
+                )}
               </div>
-              <h1 className="text-5xl md:text-6xl font-extrabold text-primary tracking-tight leading-tight mb-4">
-                {company.name}
-              </h1>
-              <div className="flex flex-wrap items-center gap-4 text-secondary font-medium text-lg">
-                <span>{company.location}</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-outline-variant/30"></span>
-                <span className="text-primary font-bold">
-                  {company.open_roles_count} Open Roles
-                </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-outline-variant/30"></span>
-                <span>Since {company.since_year}</span>
-              </div>
-            </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-16 items-start">
-              <section className="space-y-12">
-                <div className="prose prose-slate max-w-none">
-                  <h2 className="text-2xl font-bold text-primary mb-6">
-                    About Us
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-primary">
+                    Open Positions
                   </h2>
-                  {descriptionHtml ? (
-                    <div
-                      className={descriptionContentClassName}
-                      dangerouslySetInnerHTML={{ __html: descriptionHtml }}
-                    />
-                  ) : (
-                    <p className="text-lg leading-relaxed text-on-surface-variant">
-                      No company description provided.
-                    </p>
-                  )}
+                  <span className="bg-surface-container-high px-3 py-1 rounded-full text-[10px] font-bold text-primary tracking-widest uppercase">
+                    {company.open_roles_count} Available
+                  </span>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold text-primary">
-                      Open Positions
-                    </h2>
-                    <span className="bg-surface-container-high px-3 py-1 rounded-full text-[10px] font-bold text-primary tracking-widest uppercase">
-                      {company.open_roles_count} Available
-                    </span>
+                {company.jobs.length === 0 ? (
+                  <div className="bg-surface-container-lowest p-6 border border-outline-variant/15 text-secondary">
+                    No open positions at the moment.
                   </div>
-
-                  {company.jobs.length === 0 ? (
-                    <div className="bg-surface-container-lowest p-6 border border-outline-variant/15 text-secondary">
-                      No open positions at the moment.
-                    </div>
-                  ) : (
-                    <div className="bg-surface-container-lowest border border-outline-variant/15 rounded-xl p-6">
-                      <div className="space-y-4">
-                        {paginatedJobs.map((job) => (
-                          <div
-                            key={job.job_id}
-                            className="bg-white p-6 border border-outline-variant/15 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-6 hover:shadow-lg transition-all"
-                          >
-                            <div>
-                              <h3 className="text-xl font-bold text-primary mb-3">
-                                {job.title}
-                              </h3>
-                              <div className="flex flex-wrap gap-4 text-sm text-secondary font-medium">
-                                <span>
-                                  {formatSalaryLabel(
-                                    job.salary_min,
-                                    job.salary_max,
-                                  )}
-                                </span>
-                                <span>{getPostedLabel(job.created_at)}</span>
-                              </div>
+                ) : (
+                  <div className="bg-surface-container-lowest border border-outline-variant/15 rounded-xl p-6">
+                    <div className="space-y-4">
+                      {paginatedJobs.map((job) => (
+                        <div
+                          key={job.job_id}
+                          className="bg-white p-6 border border-outline-variant/15 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-6 hover:shadow-lg transition-all"
+                        >
+                          <div>
+                            <h3 className="text-xl font-bold text-primary mb-3">
+                              {job.title}
+                            </h3>
+                            <div className="flex flex-wrap gap-4 text-sm text-secondary font-medium">
+                              <span>
+                                {formatSalaryLabel(
+                                  job.salary_min,
+                                  job.salary_max,
+                                )}
+                              </span>
+                              <span>{getPostedLabel(job.created_at)}</span>
                             </div>
-                            <button
-                              onClick={() => navigate(`/jobs/${job.job_id}`)}
-                              className="bg-primary text-on-primary px-8 py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-all"
-                            >
-                              View Job
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-
-                      {jobsTotalPages > 1 && (
-                        <div className="mt-6 flex items-center justify-center gap-2">
-                          <button
-                            className="p-2.5 rounded-lg text-secondary hover:bg-surface-container-high transition-colors flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
-                            onClick={() =>
-                              setJobsPage((prev) => Math.max(1, prev - 1))
-                            }
-                            disabled={jobsPage === 1}
-                          >
-                            <span className="material-symbols-outlined">
-                              chevron_left
-                            </span>
-                            <span className="text-sm font-bold pr-2">
-                              Previous
-                            </span>
-                          </button>
-                          <div className="flex items-center gap-1">
-                            {Array.from(
-                              { length: jobsTotalPages },
-                              (_, i) => i + 1,
-                            ).map((page) => (
-                              <button
-                                key={page}
-                                onClick={() => setJobsPage(page)}
-                                className={`h-10 w-10 flex items-center justify-center rounded-lg font-bold text-sm transition-all ${
-                                  jobsPage === page
-                                    ? "bg-primary text-on-primary shadow-sm"
-                                    : "text-secondary hover:bg-surface-container-high"
-                                }`}
-                              >
-                                {page}
-                              </button>
-                            ))}
                           </div>
                           <button
-                            className="p-2.5 rounded-lg text-secondary hover:bg-surface-container-high transition-colors flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
-                            onClick={() =>
-                              setJobsPage((prev) =>
-                                Math.min(jobsTotalPages, prev + 1),
-                              )
-                            }
-                            disabled={jobsPage === jobsTotalPages}
+                            onClick={() => navigate(`/jobs/${job.job_id}`)}
+                            className="bg-primary text-on-primary px-8 py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-all"
                           >
-                            <span className="text-sm font-bold pl-2">Next</span>
-                            <span className="material-symbols-outlined">
-                              chevron_right
-                            </span>
+                            View Job
                           </button>
                         </div>
-                      )}
+                      ))}
                     </div>
-                  )}
-                </div>
-              </section>
 
-              <aside className="space-y-8 lg:sticky lg:top-24">
-                <div className="bg-surface-container-lowest p-8 border border-outline-variant/15 shadow-[0_40px_60px_-5px_rgba(25,28,30,0.06)]">
-                  <h3 className="text-xs font-bold text-secondary uppercase tracking-[0.15em] mb-6">
-                    Company Essentials
-                  </h3>
-                  <div className="space-y-6">
-                    <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">
-                      <span className="text-secondary text-sm font-medium">
-                        Category
-                      </span>
-                      <span className="text-primary font-bold">
-                        {company.category}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">
-                      <span className="text-secondary text-sm font-medium">
-                        Location
-                      </span>
-                      <span className="text-primary font-bold">
-                        {company.location}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">
-                      <span className="text-secondary text-sm font-medium">
-                        Founded
-                      </span>
-                      <span className="text-primary font-bold">
-                        {company.since_year}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">
-                      <span className="text-secondary text-sm font-medium">
-                        Website
-                      </span>
-                      {company.website ? (
-                        <a
-                          className="text-primary font-bold hover:underline"
-                          href={company.website}
-                          target="_blank"
-                          rel="noreferrer"
+                    {jobsTotalPages > 1 && (
+                      <div className="mt-6 flex items-center justify-center gap-2">
+                        <button
+                          className="p-2.5 rounded-lg text-secondary hover:bg-surface-container-high transition-colors flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
+                          onClick={() =>
+                            setJobsPage((prev) => Math.max(1, prev - 1))
+                          }
+                          disabled={jobsPage === 1}
                         >
-                          {company.website.replace(/^https?:\/\//, "")}
-                        </a>
-                      ) : (
-                        <span className="text-secondary font-medium">N/A</span>
-                      )}
-                    </div>
+                          <span className="material-symbols-outlined">
+                            chevron_left
+                          </span>
+                          <span className="text-sm font-bold pr-2">
+                            Previous
+                          </span>
+                        </button>
+                        <div className="flex items-center gap-1">
+                          {Array.from(
+                            { length: jobsTotalPages },
+                            (_, i) => i + 1,
+                          ).map((page) => (
+                            <button
+                              key={page}
+                              onClick={() => setJobsPage(page)}
+                              className={`h-10 w-10 flex items-center justify-center rounded-lg font-bold text-sm transition-all ${
+                                jobsPage === page
+                                  ? "bg-primary text-on-primary shadow-sm"
+                                  : "text-secondary hover:bg-surface-container-high"
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          ))}
+                        </div>
+                        <button
+                          className="p-2.5 rounded-lg text-secondary hover:bg-surface-container-high transition-colors flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
+                          onClick={() =>
+                            setJobsPage((prev) =>
+                              Math.min(jobsTotalPages, prev + 1),
+                            )
+                          }
+                          disabled={jobsPage === jobsTotalPages}
+                        >
+                          <span className="text-sm font-bold pl-2">Next</span>
+                          <span className="material-symbols-outlined">
+                            chevron_right
+                          </span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <aside className="space-y-8 lg:sticky lg:top-24">
+              <div className="bg-surface-container-lowest p-8 border border-outline-variant/15 shadow-[0_40px_60px_-5px_rgba(25,28,30,0.06)]">
+                <h3 className="text-xs font-bold text-secondary uppercase tracking-[0.15em] mb-6">
+                  Company Essentials
+                </h3>
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">
+                    <span className="text-secondary text-sm font-medium">
+                      Category
+                    </span>
+                    <span className="text-primary font-bold">
+                      {company.category}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">
+                    <span className="text-secondary text-sm font-medium">
+                      Location
+                    </span>
+                    <span className="text-primary font-bold">
+                      {company.location}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">
+                    <span className="text-secondary text-sm font-medium">
+                      Founded
+                    </span>
+                    <span className="text-primary font-bold">
+                      {company.since_year}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">
+                    <span className="text-secondary text-sm font-medium">
+                      Website
+                    </span>
+                    {company.website ? (
+                      <a
+                        className="text-primary font-bold hover:underline"
+                        href={company.website}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {company.website.replace(/^https?:\/\//, "")}
+                      </a>
+                    ) : (
+                      <span className="text-secondary font-medium">N/A</span>
+                    )}
                   </div>
                 </div>
-              </aside>
-            </div>
-          </>
-        )}
-      </main>
-
-      <Footer />
-    </div>
+              </div>
+            </aside>
+          </div>
+        </>
+      )}
+    </main>
   );
 };
 

@@ -20,6 +20,7 @@ import JobEdit from "./pages/JobEdit";
 import ApplicationManagement from "./pages/ApplicationManagement";
 import CandidateProfile from "./pages/CandidateProfile";
 import CandidateApplications from "./pages/CandidateApplications";
+import PublicLayout from "./layouts/PublicLayout";
 
 type StoredUser = {
   role?: {
@@ -170,27 +171,35 @@ const App = () => {
     <BrowserRouter>
       <Routes>
         <Route element={<RecruiterHostRoute />}>
-          <Route path="/" element={<JobListing />} />
-          <Route path="/job-listing" element={<JobListing />} />
-          <Route path="/company-listing" element={<CompanyListing />} />
-          <Route path="/companies/:companyId" element={<CompanyDetail />} />
-          <Route path="/jobs/:jobId" element={<JobDetail />} />
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<JobListing />} />
+            <Route path="/job-listing" element={<JobListing />} />
+            <Route path="/company-listing" element={<CompanyListing />} />
+            <Route path="/companies/:companyId" element={<CompanyDetail />} />
+            <Route path="/jobs/:jobId" element={<JobDetail />} />
+
+            <Route element={<RecruiterPrivateRoute />}>
+              <Route path="/company-profile" element={<CompanyProfile />} />
+              <Route
+                path="/application-management"
+                element={<ApplicationManagement />}
+              />
+            </Route>
+
+            <Route element={<CandidatePrivateRoute />}>
+              <Route path="/candidate-profile" element={<CandidateProfile />} />
+            </Route>
+          </Route>
 
           <Route element={<RecruiterPrivateRoute />}>
-            <Route path="/company-profile" element={<CompanyProfile />} />
             <Route path="/job-management" element={<Outlet />}>
               <Route index element={<JobManagement />} />
               <Route path="post" element={<JobPost />} />
               <Route path="edit/:jobId" element={<JobEdit />} />
             </Route>
-            <Route
-              path="/application-management"
-              element={<ApplicationManagement />}
-            />
           </Route>
 
           <Route element={<CandidatePrivateRoute />}>
-            <Route path="/candidate-profile" element={<CandidateProfile />} />
             <Route
               path="/candidate-applications"
               element={<CandidateApplications />}

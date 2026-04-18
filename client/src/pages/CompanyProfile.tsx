@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Uppy, { type UppyFile } from "@uppy/core";
-import Footer from "../layouts/Footer";
-import Navbar from "../layouts/Navbar";
 import RichTextEditor from "../components/RichTextEditor";
 
 type StoredUser = {
@@ -430,321 +428,307 @@ const CompanyProfile = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-background text-on-surface min-h-screen">
-        <Navbar />
-        <main className="pt-32 pb-24 px-6">
-          <div className="max-w-3xl mx-auto">
-            <div className="bg-surface-container-lowest rounded-xl p-10 border border-outline-variant/15">
-              Loading company profile...
-            </div>
+      <main className="pt-32 pb-24 px-6 text-on-surface">
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-surface-container-lowest rounded-xl p-10 border border-outline-variant/15">
+            Loading company profile...
           </div>
-        </main>
-        <Footer />
-      </div>
+        </div>
+      </main>
     );
   }
 
   return (
-    <div className="bg-background text-on-surface antialiased">
-      <Navbar />
+    <main className="pt-32 pb-24 px-6 text-on-surface antialiased">
+      <div className="max-w-3xl mx-auto">
+        <div className="mb-12">
+          <h1 className="text-[3.5rem] font-bold tracking-tight text-primary mb-2">
+            Company Management
+          </h1>
+          <p className="text-secondary body-lg">
+            Curate your organization's digital identity to attract top-tier
+            talent.
+          </p>
+        </div>
 
-      <main className="pt-32 pb-24 px-6">
-        <div className="max-w-3xl mx-auto">
-          <div className="mb-12">
-            <h1 className="text-[3.5rem] font-bold tracking-tight text-primary mb-2">
-              Company Management
-            </h1>
-            <p className="text-secondary body-lg">
-              Curate your organization's digital identity to attract top-tier
-              talent.
-            </p>
-          </div>
+        <div
+          ref={formContainerRef}
+          className="bg-surface-container-lowest rounded-xl p-8 md:p-12 shadow-[0_40px_60px_-5px_rgba(25,28,30,0.06)] border border-outline-variant/15"
+        >
+          <form className="space-y-10" onSubmit={handleSaveProfile}>
+            {error && (
+              <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-xl text-sm">
+                {error}
+              </div>
+            )}
 
-          <div
-            ref={formContainerRef}
-            className="bg-surface-container-lowest rounded-xl p-8 md:p-12 shadow-[0_40px_60px_-5px_rgba(25,28,30,0.06)] border border-outline-variant/15"
-          >
-            <form className="space-y-10" onSubmit={handleSaveProfile}>
-              {error && (
-                <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-xl text-sm">
-                  {error}
-                </div>
-              )}
+            {success && (
+              <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-3 rounded-xl text-sm">
+                {success}
+              </div>
+            )}
 
-              {success && (
-                <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-3 rounded-xl text-sm">
-                  {success}
-                </div>
-              )}
+            <div className="pb-2">
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*,.svg"
+                className="hidden"
+                onChange={handleAvatarInputChange}
+              />
 
-              <div className="pb-2">
-                <input
-                  ref={avatarInputRef}
-                  type="file"
-                  accept="image/*,.svg"
-                  className="hidden"
-                  onChange={handleAvatarInputChange}
-                />
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <button
+                  type="button"
+                  onClick={handleOpenAvatarPicker}
+                  className="w-24 h-24 rounded-lg bg-slate-300/70 flex items-center justify-center border border-slate-300 hover:bg-slate-300 transition-colors overflow-hidden cursor-pointer"
+                >
+                  {avatarPreviewUrl ? (
+                    <img
+                      src={avatarPreviewUrl}
+                      alt="Company logo preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      className="w-8 h-8 text-slate-600"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                    >
+                      <rect x="3" y="11" width="8" height="9" />
+                      <rect x="13" y="7" width="8" height="13" />
+                      <path d="M6 14h2M6 17h2M9 14h2M9 17h2M16 10h2M16 13h2M16 16h2" />
+                    </svg>
+                  )}
+                </button>
 
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="space-y-1.5">
+                  <p className="text-lg font-semibold text-slate-900 leading-tight">
+                    Company Logo
+                  </p>
+                  <p className="uppercase tracking-[0.14em] text-[11px] text-slate-500">
+                    Recommended: 400x400px .png, .jpg or .svg
+                  </p>
                   <button
                     type="button"
                     onClick={handleOpenAvatarPicker}
-                    className="w-24 h-24 rounded-lg bg-slate-300/70 flex items-center justify-center border border-slate-300 hover:bg-slate-300 transition-colors overflow-hidden cursor-pointer"
+                    className="text-sm font-semibold text-slate-900 hover:text-primary transition-colors break-all text-left cursor-pointer"
                   >
-                    {avatarPreviewUrl ? (
-                      <img
-                        src={avatarPreviewUrl}
-                        alt="Company logo preview"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <svg
-                        aria-hidden="true"
-                        viewBox="0 0 24 24"
-                        className="w-8 h-8 text-slate-600"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                      >
-                        <rect x="3" y="11" width="8" height="9" />
-                        <rect x="13" y="7" width="8" height="13" />
-                        <path d="M6 14h2M6 17h2M9 14h2M9 17h2M16 10h2M16 13h2M16 16h2" />
-                      </svg>
-                    )}
+                    {avatarFileName || "Choose a logo file"}
                   </button>
-
-                  <div className="space-y-1.5">
-                    <p className="text-lg font-semibold text-slate-900 leading-tight">
-                      Company Logo
-                    </p>
-                    <p className="uppercase tracking-[0.14em] text-[11px] text-slate-500">
-                      Recommended: 400x400px .png, .jpg or .svg
-                    </p>
+                  {avatarFileName && (
                     <button
                       type="button"
-                      onClick={handleOpenAvatarPicker}
-                      className="text-sm font-semibold text-slate-900 hover:text-primary transition-colors break-all text-left cursor-pointer"
+                      onClick={() => uppy.cancelAll()}
+                      className="block text-xs text-slate-500 hover:text-slate-800 transition-colors"
                     >
-                      {avatarFileName || "Choose a logo file"}
+                      Remove logo
                     </button>
-                    {avatarFileName && (
-                      <button
-                        type="button"
-                        onClick={() => uppy.cancelAll()}
-                        className="block text-xs text-slate-500 hover:text-slate-800 transition-colors"
-                      >
-                        Remove logo
-                      </button>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
+            </div>
 
+            <div
+              className={`${fieldContainerClass} ${
+                editingSection === "name" ? fieldContainerActiveClass : ""
+              }`}
+              onClick={() => handleSectionClick("name")}
+            >
+              <div className="flex justify-between items-start">
+                <label className="block font-label text-xs font-bold uppercase tracking-widest text-slate-500">
+                  Name
+                </label>
+              </div>
+              <input
+                className={getFieldControlClass(editingSection, "name")}
+                value={draftProfile.name}
+                onClick={(e) => e.stopPropagation()}
+                onFocus={() => setEditingSection("name")}
+                onChange={(e) =>
+                  setDraftProfile((prev) => ({
+                    ...prev,
+                    name: e.target.value,
+                  }))
+                }
+                placeholder="Company name"
+              />
+            </div>
+
+            <div
+              className={`${fieldContainerClass} ${
+                editingSection === "industry" ? fieldContainerActiveClass : ""
+              }`}
+              onClick={() => handleSectionClick("industry")}
+            >
+              <div className="flex justify-between items-start">
+                <label className="block font-label text-xs font-bold uppercase tracking-widest text-slate-500">
+                  Industry
+                </label>
+              </div>
+              <select
+                className={getFieldControlClass(editingSection, "industry")}
+                value={draftProfile.category_id ?? ""}
+                onChange={(e) =>
+                  setDraftProfile((prev) => ({
+                    ...prev,
+                    category_id: e.target.value ? Number(e.target.value) : null,
+                  }))
+                }
+                onClick={(e) => e.stopPropagation()}
+                onFocus={() => setEditingSection("industry")}
+              >
+                <option value="">Select industry</option>
+                {categories.map((category) => (
+                  <option
+                    key={category.category_id}
+                    value={category.category_id}
+                  >
+                    {category.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-6 items-start">
               <div
-                className={`${fieldContainerClass} ${
-                  editingSection === "name" ? fieldContainerActiveClass : ""
+                className={`${fieldContainerClass} md:w-[30%] w-full ${
+                  editingSection === "city" ? fieldContainerActiveClass : ""
                 }`}
-                onClick={() => handleSectionClick("name")}
+                onClick={() => handleSectionClick("city")}
               >
                 <div className="flex justify-between items-start">
                   <label className="block font-label text-xs font-bold uppercase tracking-widest text-slate-500">
-                    Name
-                  </label>
-                </div>
-                <input
-                  className={getFieldControlClass(editingSection, "name")}
-                  value={draftProfile.name}
-                  onClick={(e) => e.stopPropagation()}
-                  onFocus={() => setEditingSection("name")}
-                  onChange={(e) =>
-                    setDraftProfile((prev) => ({
-                      ...prev,
-                      name: e.target.value,
-                    }))
-                  }
-                  placeholder="Company name"
-                />
-              </div>
-
-              <div
-                className={`${fieldContainerClass} ${
-                  editingSection === "industry" ? fieldContainerActiveClass : ""
-                }`}
-                onClick={() => handleSectionClick("industry")}
-              >
-                <div className="flex justify-between items-start">
-                  <label className="block font-label text-xs font-bold uppercase tracking-widest text-slate-500">
-                    Industry
+                    City
                   </label>
                 </div>
                 <select
-                  className={getFieldControlClass(editingSection, "industry")}
-                  value={draftProfile.category_id ?? ""}
+                  className={getFieldControlClass(editingSection, "city")}
+                  value={draftProfile.city_id ?? ""}
                   onChange={(e) =>
                     setDraftProfile((prev) => ({
                       ...prev,
-                      category_id: e.target.value
-                        ? Number(e.target.value)
-                        : null,
+                      city_id: e.target.value ? Number(e.target.value) : null,
                     }))
                   }
                   onClick={(e) => e.stopPropagation()}
-                  onFocus={() => setEditingSection("industry")}
+                  onFocus={() => setEditingSection("city")}
                 >
-                  <option value="">Select industry</option>
-                  {categories.map((category) => (
-                    <option
-                      key={category.category_id}
-                      value={category.category_id}
-                    >
-                      {category.title}
+                  <option value="">Select city</option>
+                  {cities.map((city) => (
+                    <option key={city.city_id} value={city.city_id}>
+                      {city.name}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div className="flex flex-col md:flex-row gap-6 items-start">
-                <div
-                  className={`${fieldContainerClass} md:w-[30%] w-full ${
-                    editingSection === "city" ? fieldContainerActiveClass : ""
-                  }`}
-                  onClick={() => handleSectionClick("city")}
-                >
-                  <div className="flex justify-between items-start">
-                    <label className="block font-label text-xs font-bold uppercase tracking-widest text-slate-500">
-                      City
-                    </label>
-                  </div>
-                  <select
-                    className={getFieldControlClass(editingSection, "city")}
-                    value={draftProfile.city_id ?? ""}
-                    onChange={(e) =>
-                      setDraftProfile((prev) => ({
-                        ...prev,
-                        city_id: e.target.value ? Number(e.target.value) : null,
-                      }))
-                    }
-                    onClick={(e) => e.stopPropagation()}
-                    onFocus={() => setEditingSection("city")}
-                  >
-                    <option value="">Select city</option>
-                    {cities.map((city) => (
-                      <option key={city.city_id} value={city.city_id}>
-                        {city.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div
-                  className={`${fieldContainerClass} md:w-[70%] w-full ${
-                    editingSection === "address"
-                      ? fieldContainerActiveClass
-                      : ""
-                  }`}
-                  onClick={() => handleSectionClick("address")}
-                >
-                  <div className="flex justify-between items-start">
-                    <label className="block font-label text-xs font-bold uppercase tracking-widest text-slate-500">
-                      Address
-                    </label>
-                  </div>
-                  <input
-                    className={getFieldControlClass(editingSection, "address")}
-                    value={draftProfile.address}
-                    onClick={(e) => e.stopPropagation()}
-                    onFocus={() => setEditingSection("address")}
-                    onChange={(e) =>
-                      setDraftProfile((prev) => ({
-                        ...prev,
-                        address: e.target.value,
-                      }))
-                    }
-                    placeholder="Street, ward, district"
-                  />
-                </div>
-              </div>
-
               <div
-                className={`${fieldContainerClass} ${
-                  editingSection === "website" ? fieldContainerActiveClass : ""
+                className={`${fieldContainerClass} md:w-[70%] w-full ${
+                  editingSection === "address" ? fieldContainerActiveClass : ""
                 }`}
-                onClick={() => handleSectionClick("website")}
+                onClick={() => handleSectionClick("address")}
               >
                 <div className="flex justify-between items-start">
                   <label className="block font-label text-xs font-bold uppercase tracking-widest text-slate-500">
-                    Website URL
+                    Address
                   </label>
                 </div>
                 <input
-                  className={getFieldControlClass(editingSection, "website")}
-                  value={draftProfile.website}
+                  className={getFieldControlClass(editingSection, "address")}
+                  value={draftProfile.address}
                   onClick={(e) => e.stopPropagation()}
-                  onFocus={() => setEditingSection("website")}
+                  onFocus={() => setEditingSection("address")}
                   onChange={(e) =>
                     setDraftProfile((prev) => ({
                       ...prev,
-                      website: e.target.value,
+                      address: e.target.value,
                     }))
                   }
-                  placeholder="https://your-company.com"
+                  placeholder="Street, ward, district"
                 />
               </div>
+            </div>
 
-              <div
-                className={`${fieldContainerClass} ${
-                  editingSection === "description"
-                    ? fieldContainerActiveClass
-                    : ""
-                }`}
-                onClick={() => handleSectionClick("description")}
+            <div
+              className={`${fieldContainerClass} ${
+                editingSection === "website" ? fieldContainerActiveClass : ""
+              }`}
+              onClick={() => handleSectionClick("website")}
+            >
+              <div className="flex justify-between items-start">
+                <label className="block font-label text-xs font-bold uppercase tracking-widest text-slate-500">
+                  Website URL
+                </label>
+              </div>
+              <input
+                className={getFieldControlClass(editingSection, "website")}
+                value={draftProfile.website}
+                onClick={(e) => e.stopPropagation()}
+                onFocus={() => setEditingSection("website")}
+                onChange={(e) =>
+                  setDraftProfile((prev) => ({
+                    ...prev,
+                    website: e.target.value,
+                  }))
+                }
+                placeholder="https://your-company.com"
+              />
+            </div>
+
+            <div
+              className={`${fieldContainerClass} ${
+                editingSection === "description"
+                  ? fieldContainerActiveClass
+                  : ""
+              }`}
+              onClick={() => handleSectionClick("description")}
+            >
+              <div className="flex justify-between items-start">
+                <label className="block font-label text-xs font-bold uppercase tracking-widest text-slate-500">
+                  Description
+                </label>
+              </div>
+              <div onClick={(e) => e.stopPropagation()}>
+                <RichTextEditor
+                  value={draftProfile.description}
+                  onChange={(nextValue) =>
+                    setDraftProfile((prev) => ({
+                      ...prev,
+                      description: nextValue,
+                    }))
+                  }
+                  placeholder="Company description"
+                  heightClassName="h-[280px]"
+                />
+              </div>
+            </div>
+
+            <div className="pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
+              <button
+                className="text-secondary font-semibold hover:text-primary transition-colors order-2 md:order-1"
+                type="button"
+                onClick={handleDiscard}
               >
-                <div className="flex justify-between items-start">
-                  <label className="block font-label text-xs font-bold uppercase tracking-widest text-slate-500">
-                    Description
-                  </label>
-                </div>
-                <div onClick={(e) => e.stopPropagation()}>
-                  <RichTextEditor
-                    value={draftProfile.description}
-                    onChange={(nextValue) =>
-                      setDraftProfile((prev) => ({
-                        ...prev,
-                        description: nextValue,
-                      }))
-                    }
-                    placeholder="Company description"
-                    heightClassName="h-[280px]"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                Discard changes
+              </button>
+              <div className="flex gap-4 w-full md:w-auto order-1 md:order-2">
                 <button
-                  className="text-secondary font-semibold hover:text-primary transition-colors order-2 md:order-1"
-                  type="button"
-                  onClick={handleDiscard}
+                  className="w-full md:w-auto bg-primary text-on-primary px-10 py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition-opacity disabled:opacity-60"
+                  type="submit"
+                  disabled={isSaving}
                 >
-                  Discard changes
+                  {isSaving ? "Saving..." : "Save Profile"}
                 </button>
-                <div className="flex gap-4 w-full md:w-auto order-1 md:order-2">
-                  <button
-                    className="w-full md:w-auto bg-primary text-on-primary px-10 py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition-opacity disabled:opacity-60"
-                    type="submit"
-                    disabled={isSaving}
-                  >
-                    {isSaving ? "Saving..." : "Save Profile"}
-                  </button>
-                </div>
               </div>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </main>
   );
 };
 
