@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Footer from "../layouts/Footer";
-import Navbar from "../layouts/Navbar";
 
 type StoredUser = {
   user_id?: number;
@@ -317,227 +315,219 @@ const CandidateProfile = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-surface text-on-surface antialiased min-h-screen">
-        <Navbar />
-        <main className="max-w-200 mx-auto px-6 py-12 pt-32">
-          <div className="bg-surface-container-lowest p-8 lg:p-12 rounded-xl">
-            <p className="text-secondary">Loading candidate profile...</p>
-          </div>
-        </main>
-        <Footer />
-      </div>
+      <main className="max-w-200 mx-auto px-6 py-12 pt-32">
+        <div className="bg-surface-container-lowest p-8 lg:p-12 rounded-xl">
+          <p className="text-secondary">Loading candidate profile...</p>
+        </div>
+      </main>
     );
   }
 
   return (
-    <div className="bg-surface text-on-surface antialiased">
-      {/* TopNavBar Component  */}
-      <main className="max-w-200 mx-auto px-6 py-12 pt-32">
-        {/* Editorial Header  */}
-        <div className="mb-12">
-          <span className="text-xs font-bold tracking-widest text-secondary uppercase mb-3 block">
-            Account Settings
-          </span>
-          <h1 className="text-5xl font-extrabold tracking-tight text-primary leading-tight">
-            My Profile
-          </h1>
-          <p className="text-secondary text-lg mt-4 max-w-2xl leading-relaxed">
-            Keep your profile up to date so recruiters can evaluate your fit
-            quickly.
-          </p>
-        </div>
-        <form className="space-y-10" onSubmit={handleSaveProfile}>
-          <section className="bg-surface-container-lowest p-8 lg:p-12 rounded-xl">
-            <div className="flex items-center gap-3 mb-10">
-              <span className="material-symbols-outlined text-primary text-3xl">
-                person
-              </span>
-              <h2 className="text-2xl font-bold text-primary">
-                Personal Information
-              </h2>
-            </div>
-
-            {error && (
-              <div className="mb-6 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {error}
-              </div>
-            )}
-
-            {success && (
-              <div className="mb-6 rounded-xl border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-700">
-                {success}
-              </div>
-            )}
-
-            <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold tracking-widest text-secondary uppercase px-1">
-                    Full Name
-                  </label>
-                  <input
-                    className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-fixed transition-all outline-none"
-                    placeholder="Enter your full name"
-                    type="text"
-                    value={draftProfile.full_name}
-                    onChange={(event) =>
-                      setDraftProfile((prev) => ({
-                        ...prev,
-                        full_name: event.target.value,
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold tracking-widest text-secondary uppercase px-1">
-                    Phone Number
-                  </label>
-                  <input
-                    className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-fixed transition-all outline-none"
-                    placeholder="Enter your phone number"
-                    type="tel"
-                    value={draftProfile.phone}
-                    onChange={(event) =>
-                      setDraftProfile((prev) => ({
-                        ...prev,
-                        phone: event.target.value,
-                      }))
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold tracking-widest text-secondary uppercase px-1">
-                    Email Address
-                  </label>
-                  <input
-                    className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 text-secondary outline-none"
-                    type="email"
-                    value={draftProfile.email}
-                    readOnly
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold tracking-widest text-secondary uppercase px-1">
-                    City
-                  </label>
-                  <select
-                    className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-fixed transition-all outline-none"
-                    value={draftProfile.city_id}
-                    onChange={(event) =>
-                      setDraftProfile((prev) => ({
-                        ...prev,
-                        city_id: Number(event.target.value),
-                      }))
-                    }
-                  >
-                    <option value={0}>Select your city</option>
-                    {cities.map((city) => (
-                      <option key={city.city_id} value={city.city_id}>
-                        {city.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="bg-surface-container-lowest p-8 lg:p-12 rounded-xl">
-            <div className="flex items-center gap-3 mb-10">
-              <span className="material-symbols-outlined text-primary text-3xl">
-                auto_awesome
-              </span>
-              <h2 className="text-2xl font-bold text-primary">Skills</h2>
-            </div>
-
-            <p className="text-secondary text-sm -mt-6 mb-5">
-              Tell recruiters what you can do best.
-            </p>
-
-            <div className="relative mb-5">
-              <input
-                className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-fixed transition-all outline-none"
-                placeholder="Search or type a skill and press Enter"
-                type="text"
-                value={skillInput}
-                onChange={(event) => setSkillInput(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    handleAddSkill();
-                  }
-                }}
-              />
-
-              {skillInput.trim() && availableSkillOptions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-outline-variant/20 rounded-xl shadow-lg z-50 py-2 max-h-60 overflow-y-auto">
-                  {availableSkillOptions.map((option) => (
-                    <button
-                      key={option.skill_id}
-                      className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors"
-                      type="button"
-                      onClick={() => handleSelectSkill(option.name)}
-                    >
-                      {option.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {isLoadingSkills && skillInput.trim() && (
-              <p className="text-xs text-secondary mb-4">Searching skills...</p>
-            )}
-
-            <div className="flex flex-wrap gap-3">
-              {draftProfile.skills.length > 0 ? (
-                draftProfile.skills.map((skill) => (
-                  <div
-                    key={skill}
-                    className="group flex items-center gap-2 bg-secondary-fixed-dim/30 text-on-secondary-fixed px-5 py-2.5 rounded-full text-xs font-bold tracking-wide border border-transparent hover:border-outline-variant/20 transition-all cursor-default"
-                  >
-                    {skill}
-                    <button
-                      className="material-symbols-outlined text-sm cursor-pointer opacity-40 group-hover:opacity-100 transition-opacity"
-                      type="button"
-                      onClick={() => handleRemoveSkill(skill)}
-                    >
-                      close
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-secondary">No skills added yet.</p>
-              )}
-            </div>
-          </section>
-
-          <div className="flex flex-col md:flex-row gap-4 pt-4">
-            <button
-              className="flex-1 bg-primary text-on-primary py-4 rounded-xl font-bold text-sm tracking-widest uppercase shadow-xl shadow-primary/10 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50"
-              type="submit"
-              disabled={isSaving}
-            >
-              {isSaving ? "Saving..." : "Save Changes"}
-            </button>
-            <button
-              className="flex-1 bg-surface-container-highest text-primary py-4 rounded-xl font-bold text-sm tracking-widest uppercase hover:bg-surface-container-high active:scale-95 transition-all"
-              type="button"
-              onClick={handleDiscard}
-              disabled={isSaving}
-            >
-              Cancel
-            </button>
+    <main className="max-w-200 mx-auto px-6 py-12 pt-32">
+      {/* Editorial Header  */}
+      <div className="mb-12">
+        <span className="text-xs font-bold tracking-widest text-secondary uppercase mb-3 block">
+          Account Settings
+        </span>
+        <h1 className="text-5xl font-extrabold tracking-tight text-primary leading-tight">
+          My Profile
+        </h1>
+        <p className="text-secondary text-lg mt-4 max-w-2xl leading-relaxed">
+          Keep your profile up to date so recruiters can evaluate your fit
+          quickly.
+        </p>
+      </div>
+      <form className="space-y-10" onSubmit={handleSaveProfile}>
+        <section className="bg-surface-container-lowest p-8 lg:p-12 rounded-xl">
+          <div className="flex items-center gap-3 mb-10">
+            <span className="material-symbols-outlined text-primary text-3xl">
+              person
+            </span>
+            <h2 className="text-2xl font-bold text-primary">
+              Personal Information
+            </h2>
           </div>
-        </form>
-      </main>
-      {/* Footer  */}
-    </div>
+
+          {error && (
+            <div className="mb-6 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-6 rounded-xl border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-700">
+              {success}
+            </div>
+          )}
+
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold tracking-widest text-secondary uppercase px-1">
+                  Full Name
+                </label>
+                <input
+                  className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-fixed transition-all outline-none"
+                  placeholder="Enter your full name"
+                  type="text"
+                  value={draftProfile.full_name}
+                  onChange={(event) =>
+                    setDraftProfile((prev) => ({
+                      ...prev,
+                      full_name: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold tracking-widest text-secondary uppercase px-1">
+                  Phone Number
+                </label>
+                <input
+                  className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-fixed transition-all outline-none"
+                  placeholder="Enter your phone number"
+                  type="tel"
+                  value={draftProfile.phone}
+                  onChange={(event) =>
+                    setDraftProfile((prev) => ({
+                      ...prev,
+                      phone: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold tracking-widest text-secondary uppercase px-1">
+                  Email Address
+                </label>
+                <input
+                  className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 text-secondary outline-none"
+                  type="email"
+                  value={draftProfile.email}
+                  readOnly
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold tracking-widest text-secondary uppercase px-1">
+                  City
+                </label>
+                <select
+                  className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-fixed transition-all outline-none"
+                  value={draftProfile.city_id}
+                  onChange={(event) =>
+                    setDraftProfile((prev) => ({
+                      ...prev,
+                      city_id: Number(event.target.value),
+                    }))
+                  }
+                >
+                  <option value={0}>Select your city</option>
+                  {cities.map((city) => (
+                    <option key={city.city_id} value={city.city_id}>
+                      {city.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-surface-container-lowest p-8 lg:p-12 rounded-xl">
+          <div className="flex items-center gap-3 mb-10">
+            <span className="material-symbols-outlined text-primary text-3xl">
+              auto_awesome
+            </span>
+            <h2 className="text-2xl font-bold text-primary">Skills</h2>
+          </div>
+
+          <p className="text-secondary text-sm -mt-6 mb-5">
+            Tell recruiters what you can do best.
+          </p>
+
+          <div className="relative mb-5">
+            <input
+              className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-fixed transition-all outline-none"
+              placeholder="Search or type a skill and press Enter"
+              type="text"
+              value={skillInput}
+              onChange={(event) => setSkillInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  handleAddSkill();
+                }
+              }}
+            />
+
+            {skillInput.trim() && availableSkillOptions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-outline-variant/20 rounded-xl shadow-lg z-50 py-2 max-h-60 overflow-y-auto">
+                {availableSkillOptions.map((option) => (
+                  <button
+                    key={option.skill_id}
+                    className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors"
+                    type="button"
+                    onClick={() => handleSelectSkill(option.name)}
+                  >
+                    {option.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {isLoadingSkills && skillInput.trim() && (
+            <p className="text-xs text-secondary mb-4">Searching skills...</p>
+          )}
+
+          <div className="flex flex-wrap gap-3">
+            {draftProfile.skills.length > 0 ? (
+              draftProfile.skills.map((skill) => (
+                <div
+                  key={skill}
+                  className="group flex items-center gap-2 bg-secondary-fixed-dim/30 text-on-secondary-fixed px-5 py-2.5 rounded-full text-xs font-bold tracking-wide border border-transparent hover:border-outline-variant/20 transition-all cursor-default"
+                >
+                  {skill}
+                  <button
+                    className="material-symbols-outlined text-sm cursor-pointer opacity-40 group-hover:opacity-100 transition-opacity"
+                    type="button"
+                    onClick={() => handleRemoveSkill(skill)}
+                  >
+                    close
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-secondary">No skills added yet.</p>
+            )}
+          </div>
+        </section>
+
+        <div className="flex flex-col md:flex-row gap-4 pt-4">
+          <button
+            className="flex-1 bg-primary text-on-primary py-4 rounded-xl font-bold text-sm tracking-widest uppercase shadow-xl shadow-primary/10 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50"
+            type="submit"
+            disabled={isSaving}
+          >
+            {isSaving ? "Saving..." : "Save Changes"}
+          </button>
+          <button
+            className="flex-1 bg-surface-container-highest text-primary py-4 rounded-xl font-bold text-sm tracking-widest uppercase hover:bg-surface-container-high active:scale-95 transition-all"
+            type="button"
+            onClick={handleDiscard}
+            disabled={isSaving}
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </main>
   );
 };
 
