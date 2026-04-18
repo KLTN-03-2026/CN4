@@ -28,6 +28,16 @@ type StoredUser = {
   };
 };
 
+const isRecruiterHost = () => {
+  const hostname = window.location.hostname.toLowerCase();
+
+  return (
+    hostname === "recruiter.localhost" ||
+    hostname === "recruiter.127.0.0.1" ||
+    hostname.startsWith("recruiter.")
+  );
+};
+
 const getStoredUser = () => {
   const rawUser = localStorage.getItem("user");
 
@@ -109,6 +119,10 @@ const PublicOnlyRoute = () => {
 };
 
 const CandidateLoginRoute = () => {
+  if (isRecruiterHost()) {
+    return <Navigate to="/recruiter-login" replace />;
+  }
+
   const role = getUserRole();
 
   if (role === "candidate") {
@@ -122,44 +136,69 @@ const RecruiterLoginRoute = () => {
   const role = getUserRole();
 
   if (role === "recruiter") {
-    return <Navigate to="/" replace />;
+    return (
+      <Navigate to={isRecruiterHost() ? "/job-management" : "/"} replace />
+    );
   }
 
   return <RecruiterLogin />;
+};
+
+const CandidateSignUpRoute = () => {
+  if (isRecruiterHost()) {
+    return <Navigate to="/recruiter-signup" replace />;
+  }
+
+  return <CandidateSignUp />;
+};
+
+const RecruiterHostRoute = () => {
+  if (!isRecruiterHost()) {
+    return <Outlet />;
+  }
+
+  const role = getUserRole();
+  if (role !== "recruiter") {
+    return <Navigate to="/recruiter-login" replace />;
+  }
+
+  return <Outlet />;
 };
 
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<JobListing />} />
-        <Route path="/job-listing" element={<JobListing />} />
-        <Route path="/company-listing" element={<CompanyListing />} />
-        <Route path="/companies/:companyId" element={<CompanyDetail />} />
-        <Route path="/jobs/:jobId" element={<JobDetail />} />
+        <Route element={<RecruiterHostRoute />}>
+          <Route path="/" element={<JobListing />} />
+          <Route path="/job-listing" element={<JobListing />} />
+          <Route path="/company-listing" element={<CompanyListing />} />
+          <Route path="/companies/:companyId" element={<CompanyDetail />} />
+          <Route path="/jobs/:jobId" element={<JobDetail />} />
 
-        <Route element={<RecruiterPrivateRoute />}>
-          <Route path="/company-profile" element={<CompanyProfile />} />
-          <Route path="/job-management" element={<Outlet />}>
-            <Route index element={<JobManagement />} />
-            <Route path="post" element={<JobPost />} />
-            <Route path="edit/:jobId" element={<JobEdit />} />
+          <Route element={<RecruiterPrivateRoute />}>
+            <Route path="/company-profile" element={<CompanyProfile />} />
+            <Route path="/job-management" element={<Outlet />}>
+              <Route index element={<JobManagement />} />
+              <Route path="post" element={<JobPost />} />
+              <Route path="edit/:jobId" element={<JobEdit />} />
+            </Route>
+            <Route
+              path="/application-management"
+              element={<ApplicationManagement />}
+            />
           </Route>
-          <Route
-            path="/application-management"
-            element={<ApplicationManagement />}
-          />
+
+          <Route element={<CandidatePrivateRoute />}>
+            <Route path="/candidate-profile" element={<CandidateProfile />} />
+            <Route
+              path="/candidate-applications"
+              element={<CandidateApplications />}
+            />
+          </Route>
         </Route>
 
-        <Route element={<CandidatePrivateRoute />}>
-          <Route path="/candidate-profile" element={<CandidateProfile />} />
-          <Route
-            path="/candidate-applications"
-            element={<CandidateApplications />}
-          />
-        </Route>
-
-        <Route path="/candidate-signup" element={<CandidateSignUp />} />
+        <Route path="/candidate-signup" element={<CandidateSignUpRoute />} />
         <Route path="/recruiter-signup" element={<RecruiterSignUp />} />
         <Route element={<PublicOnlyRoute />}>
           <Route path="/candidate-login" element={<CandidateLoginRoute />} />
