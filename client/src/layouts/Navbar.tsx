@@ -10,34 +10,14 @@ type StoredUser = {
   };
 };
 
-type StoredCompany = {
-  name?: string;
-};
-
 const Navbar = () => {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<StoredUser | null>(null);
-  const [currentCompany, setCurrentCompany] = useState<StoredCompany | null>(
-    null,
-  );
-  const [isRecruiterMenuOpen, setIsRecruiterMenuOpen] = useState(false);
   const [isCandidateMenuOpen, setIsCandidateMenuOpen] = useState(false);
-  const recruiterMenuRef = useRef<HTMLDivElement | null>(null);
   const candidateMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const rawUser = localStorage.getItem("user");
-    const rawCompany = localStorage.getItem("company");
-
-    if (rawCompany) {
-      try {
-        setCurrentCompany(JSON.parse(rawCompany));
-      } catch {
-        setCurrentCompany(null);
-      }
-    } else {
-      setCurrentCompany(null);
-    }
 
     if (!rawUser) {
       setCurrentUser(null);
@@ -56,13 +36,6 @@ const Navbar = () => {
       const target = event.target as Node;
 
       if (
-        recruiterMenuRef.current &&
-        !recruiterMenuRef.current.contains(target)
-      ) {
-        setIsRecruiterMenuOpen(false);
-      }
-
-      if (
         candidateMenuRef.current &&
         !candidateMenuRef.current.contains(target)
       ) {
@@ -77,23 +50,18 @@ const Navbar = () => {
     };
   }, []);
 
-  const isRecruiter =
-    currentUser?.role?.role_id === 2 ||
-    currentUser?.role?.title?.toLowerCase() === "recruiter";
+  const isCandidate =
+    currentUser?.role?.role_id === 3 ||
+    currentUser?.role?.title?.toLowerCase() === "candidate";
 
   const isLoggedIn = Boolean(currentUser?.email);
-  const displayIdentity =
-    isRecruiter && currentCompany?.name
-      ? currentCompany.name
-      : currentUser?.full_name?.trim() || "Candidate";
+  const displayIdentity = currentUser?.full_name?.trim() || "Candidate";
 
   const clearAuthSession = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     localStorage.removeItem("company");
     setCurrentUser(null);
-    setCurrentCompany(null);
-    setIsRecruiterMenuOpen(false);
     setIsCandidateMenuOpen(false);
   };
 
@@ -132,11 +100,6 @@ const Navbar = () => {
 
   const handleFindCompanies = () => {
     navigate("/company-listing");
-  };
-
-  const handleRecruiterMenuNavigate = (path: string) => {
-    setIsRecruiterMenuOpen(false);
-    navigate(path);
   };
 
   const handleCandidateMenuNavigate = (path: string) => {
@@ -184,59 +147,16 @@ const Navbar = () => {
           </nav>
         </div>
         <div className="flex items-center gap-4">
-          {!isRecruiter && (
-            <button
-              className="px-5 py-2.5 text-sm font-semibold text-primary dark:text-blue-100 border border-primary dark:border-blue-400 rounded-lg cursor-pointer hover:bg-primary/10 hover:opacity-80 active:scale-95 transition-all duration-200"
-              onClick={handleFindCandidates}
-            >
-              For Recruiter
-            </button>
-          )}
+          <button
+            className="px-5 py-2.5 text-sm font-semibold text-primary dark:text-blue-100 border border-primary dark:border-blue-400 rounded-lg cursor-pointer hover:bg-primary/10 hover:opacity-80 active:scale-95 transition-all duration-200"
+            onClick={handleFindCandidates}
+          >
+            For Recruiter
+          </button>
 
           {isLoggedIn ? (
             <div className="flex items-center gap-3">
-              {isRecruiter ? (
-                <div className="relative" ref={recruiterMenuRef}>
-                  <button
-                    className="px-4 py-2 rounded-lg bg-surface-container-low border border-outline-variant/20 text-sm font-semibold text-primary flex items-center gap-2"
-                    onClick={() => setIsRecruiterMenuOpen((prev) => !prev)}
-                  >
-                    <span>{displayIdentity}</span>
-                    <span className="material-symbols-outlined text-base">
-                      arrow_drop_down
-                    </span>
-                  </button>
-
-                  {isRecruiterMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-outline-variant/20 rounded-xl shadow-lg z-50 py-2">
-                      <button
-                        className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors"
-                        onClick={() =>
-                          handleRecruiterMenuNavigate("/company-profile")
-                        }
-                      >
-                        Company Profile
-                      </button>
-                      <button
-                        className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors"
-                        onClick={() =>
-                          handleRecruiterMenuNavigate("/job-management")
-                        }
-                      >
-                        Job Management
-                      </button>
-                      <button
-                        className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors"
-                        onClick={() =>
-                          handleRecruiterMenuNavigate("/application-management")
-                        }
-                      >
-                        Applicant Management
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
+              {isCandidate && (
                 <div className="relative" ref={candidateMenuRef}>
                   <button
                     className="px-4 py-2 rounded-lg bg-surface-container-low border border-outline-variant/20 text-sm font-semibold text-primary flex items-center gap-2"
