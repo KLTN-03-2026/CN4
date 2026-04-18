@@ -8,6 +8,24 @@ const RecruiterLogin = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const buildRecruiterUrl = (path: string) => {
+    const { protocol, hostname, port } = window.location;
+    let targetHostname = hostname;
+
+    if (!hostname.startsWith("recruiter.")) {
+      if (hostname === "localhost" || hostname === "127.0.0.1") {
+        targetHostname = "recruiter.localhost";
+      } else {
+        targetHostname = `recruiter.${hostname}`;
+      }
+    }
+
+    const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+    const hostWithPort = port ? `${targetHostname}:${port}` : targetHostname;
+
+    return `${protocol}//${hostWithPort}${normalizedPath}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
@@ -45,8 +63,7 @@ const RecruiterLogin = () => {
       setEmail("");
       setPassword("");
       setTimeout(() => {
-        // Redirect to job listing after successful login
-        navigate("/job-listing");
+        window.location.assign(buildRecruiterUrl("/job-management"));
       }, 1000);
     } catch (err) {
       setError("An error occurred. Please try again.");

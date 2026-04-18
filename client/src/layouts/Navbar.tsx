@@ -97,6 +97,24 @@ const Navbar = () => {
     setIsCandidateMenuOpen(false);
   };
 
+  const buildRecruiterUrl = (path: string) => {
+    const { protocol, hostname, port } = window.location;
+    let targetHostname = hostname;
+
+    if (!hostname.startsWith("recruiter.")) {
+      if (hostname === "localhost" || hostname === "127.0.0.1") {
+        targetHostname = "recruiter.localhost";
+      } else {
+        targetHostname = `recruiter.${hostname}`;
+      }
+    }
+
+    const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+    const hostWithPort = port ? `${targetHostname}:${port}` : targetHostname;
+
+    return `${protocol}//${hostWithPort}${normalizedPath}`;
+  };
+
   const handleLogout = () => {
     clearAuthSession();
     navigate("/job-listing");
@@ -105,7 +123,7 @@ const Navbar = () => {
   const handleFindCandidates = () => {
     // Ensure switching to recruiter flow always starts from a clean session.
     clearAuthSession();
-    navigate("/recruiter-login");
+    window.location.assign(buildRecruiterUrl("/recruiter-login"));
   };
 
   const handleFindJobs = () => {
