@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import JobApply from "./JobApply";
 
 type JobDetailData = {
   job_id: number;
@@ -18,6 +19,13 @@ type JobDetailData = {
   requirements: string | null;
   benefits: string | null;
   skills: string[];
+};
+
+type StoredUser = {
+  role?: {
+    role_id?: number;
+    title?: string;
+  };
 };
 
 const sanitizeHtml = (value: string | null | undefined): string => {
@@ -100,6 +108,32 @@ const JobDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isCompanyLogoBroken, setIsCompanyLogoBroken] = useState(false);
+  const [isApplyOverlayOpen, setIsApplyOverlayOpen] = useState(false);
+
+  const handleApplyClick = () => {
+    const rawUser = localStorage.getItem("user");
+
+    if (!rawUser) {
+      navigate("/candidate-login");
+      return;
+    }
+
+    try {
+      const user = JSON.parse(rawUser) as StoredUser;
+      const isCandidate =
+        user?.role?.role_id === 3 ||
+        user?.role?.title?.toLowerCase() === "candidate";
+
+      if (!isCandidate) {
+        navigate("/candidate-login");
+        return;
+      }
+
+      setIsApplyOverlayOpen(true);
+    } catch {
+      navigate("/candidate-login");
+    }
+  };
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -261,14 +295,20 @@ const JobDetail = () => {
                 )}
               </div>
 
-              <button className="w-full bg-primary text-on-primary py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all">
+              <button
+                className="w-full bg-primary text-on-primary py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all"
+                onClick={handleApplyClick}
+              >
                 Apply for this position
               </button>
             </section>
 
             <aside className="space-y-8">
               <div className="bg-surface-container-lowest p-8 shadow-[0_40px_60px_-5px_rgba(25,28,30,0.06)] border border-outline-variant/15">
-                <button className="w-full bg-primary text-on-primary py-4 rounded-xl font-bold text-lg mb-6 hover:opacity-90 transition-all">
+                <button
+                  className="w-full bg-primary text-on-primary py-4 rounded-xl font-bold text-lg mb-6 hover:opacity-90 transition-all"
+                  onClick={handleApplyClick}
+                >
                   Apply for this position
                 </button>
                 <div className="space-y-6">
@@ -371,6 +411,13 @@ const JobDetail = () => {
               </div>
             </aside>
           </div>
+
+          <JobApply
+            open={isApplyOverlayOpen}
+            jobTitle={job.title}
+            companyName={job.company_name}
+            onClose={() => setIsApplyOverlayOpen(false)}
+          />
         </>
       )}
     </main>
