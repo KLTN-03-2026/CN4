@@ -48,6 +48,25 @@ function sanitizeFileName(fileName: string): string {
     .slice(0, 120);
 }
 
+function hasMojibake(fileName: string): boolean {
+  return /Ã.|Â.|Ä.|áº|á»|â.|Ê.|Ô.|Õ./.test(fileName);
+}
+
+function decodeUploadedFileName(fileName: string): string {
+  const fallbackName = fileName.trim() || "resume";
+
+  if (!hasMojibake(fallbackName)) {
+    return fallbackName;
+  }
+
+  try {
+    const decodedName = Buffer.from(fallbackName, "latin1").toString("utf8");
+    return decodedName.includes("�") ? fallbackName : decodedName;
+  } catch {
+    return fallbackName;
+  }
+}
+
 function extractResumePath(fileUrl: string): string | null {
   const trimmed = fileUrl.trim();
   if (!trimmed) {
@@ -442,8 +461,10 @@ export const uploadCandidateResume = async (req: Request, res: Response) => {
       return;
     }
 
+    const originalFileName = decodeUploadedFileName(file.originalname);
+
     const extension = (() => {
-      const lower = file.originalname.toLowerCase();
+      const lower = originalFileName.toLowerCase();
       if (lower.endsWith(".pdf")) return "pdf";
       if (lower.endsWith(".docx")) return "docx";
       if (lower.endsWith(".doc")) return "doc";
@@ -454,9 +475,7 @@ export const uploadCandidateResume = async (req: Request, res: Response) => {
           : "doc";
     })();
 
-    const baseName = sanitizeFileName(
-      file.originalname.replace(/\.[^.]+$/, ""),
-    );
+    const baseName = sanitizeFileName(originalFileName.replace(/\.[^.]+$/, ""));
     const objectPath = `candidate-${candidate.candidate_id}/${Date.now()}-${baseName || "resume"}.${extension}`;
 
     const { error: uploadError } = await supabaseAdmin.storage
@@ -474,7 +493,7 @@ export const uploadCandidateResume = async (req: Request, res: Response) => {
     const createdResume = await prisma.resume.create({
       data: {
         candidate_id: candidate.candidate_id,
-        name: file.originalname,
+        name: originalFileName,
         file_url: objectPath,
       },
     });
