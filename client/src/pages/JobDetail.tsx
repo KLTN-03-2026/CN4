@@ -352,9 +352,7 @@ const JobDetail = () => {
                     <span className="material-symbols-outlined text-lg leading-none mt-0.5 text-outline">
                       inventory_2
                     </span>
-                    <span className="font-medium text-secondary">
-                      Linh vuc:
-                    </span>
+                    <span className="font-medium text-secondary">Industry</span>
                     <span className="font-semibold text-on-surface">
                       {job.company_category}
                     </span>
@@ -364,9 +362,7 @@ const JobDetail = () => {
                     <span className="material-symbols-outlined text-lg leading-none mt-0.5 text-outline">
                       location_on
                     </span>
-                    <span className="font-medium text-secondary">
-                      Dia diem:
-                    </span>
+                    <span className="font-medium text-secondary">Location</span>
                     <span className="font-semibold text-on-surface">
                       {job.company_address}
                     </span>
