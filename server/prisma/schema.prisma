@@ -117,13 +117,13 @@ model Resume {
 }
 
 model Application {
-  application_id Int      @id @default(autoincrement())
+  application_id Int               @id @default(autoincrement())
   candidate_id   Int
   job_id         Int
   resume_id      Int
-  status         String
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
+  status         ApplicationStatus @default(pending)
+  created_at     DateTime          @default(now())
+  updated_at     DateTime          @updatedAt
 
   candidate Candidate @relation(fields: [candidate_id], references: [candidate_id])
   job       Job       @relation(fields: [job_id], references: [job_id])
@@ -187,4 +187,11 @@ enum JobStatus {
   closed
   pending
   expired
+}
+
+enum ApplicationStatus {
+  pending
+  reviewing
+  rejected
+  accepted
 }
