@@ -192,7 +192,7 @@ const App = () => {
             <Route element={<RecruiterLayout />}>
               <Route path="/company-profile" element={<CompanyProfile />} />
               <Route
-                path="/application-management"
+                path="/application-management/:jobId"
                 element={<ApplicationManagement />}
               />
               <Route path="/job-management" element={<Outlet />}>

@@ -1,339 +1,423 @@
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+
+type StoredUser = {
+  user_id?: number;
+  role?: {
+    role_id?: number;
+    title?: string;
+  };
+};
+
+type JobApplication = {
+  application_id: number;
+  status: string;
+  created_at: string;
+  candidate: {
+    candidate_id: number;
+    full_name: string;
+    email: string;
+    location: string;
+    avatar_url?: string;
+  };
+  resume: {
+    resume_id: number;
+    name: string;
+    file_url: string;
+  };
+};
+
+type JobData = {
+  job_id: number;
+  title: string;
+  created_at: string;
+};
+
+const statusBadgeClasses: Record<string, string> = {
+  submitted: "bg-blue-100 text-blue-800",
+  pending: "bg-orange-100 text-orange-800",
+  success: "bg-green-100 text-green-800",
+  accepted: "bg-green-100 text-green-800",
+  reviewed: "bg-purple-100 text-purple-800",
+  failed: "bg-red-100 text-red-800",
+  rejected: "bg-red-100 text-red-800",
+};
+
+const statusDotClasses: Record<string, string> = {
+  submitted: "bg-blue-500",
+  pending: "bg-orange-500",
+  success: "bg-green-500",
+  accepted: "bg-green-500",
+  reviewed: "bg-purple-500",
+  failed: "bg-red-500",
+  rejected: "bg-red-500",
+};
+
+const statusLabels: Record<string, string> = {
+  submitted: "Submitted",
+  pending: "Pending",
+  success: "Success",
+  accepted: "Accepted",
+  reviewed: "Reviewed",
+  failed: "Failed",
+  rejected: "Rejected",
+};
+
+const formatDate = (value: string) => {
+  const date = new Date(value);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
+};
+
 const ApplicationManagement = () => {
+  const navigate = useNavigate();
+  const { jobId } = useParams<{ jobId: string }>();
+  const [job, setJob] = useState<JobData | null>(null);
+  const [applications, setApplications] = useState<JobApplication[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const rawUser = useMemo(() => localStorage.getItem("user"), []);
+
+  const parsedUser = useMemo(() => {
+    if (!rawUser) {
+      return null;
+    }
+    try {
+      return JSON.parse(rawUser) as StoredUser;
+    } catch {
+      return null;
+    }
+  }, [rawUser]);
+
+  const userId = parsedUser?.user_id;
+  const isRecruiter =
+    parsedUser?.role?.role_id === 2 ||
+    parsedUser?.role?.title?.toLowerCase() === "recruiter";
+
+  useEffect(() => {
+    if (!userId || !isRecruiter || !jobId) {
+      if (!userId || !isRecruiter) {
+        navigate("/recruiter-login", { replace: true });
+      }
+      return;
+    }
+
+    const fetchApplications = async () => {
+      setIsLoading(true);
+      setError("");
+
+      try {
+        const response = await fetch(
+          `http://localhost:3000/api/jobs/${jobId}/applications`,
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.message || "Failed to load applications");
+          return;
+        }
+
+        setJob(data.job);
+        setApplications(data.applications || []);
+      } catch (err) {
+        setError("An error occurred while loading applications.");
+        console.error("Fetch applications error:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchApplications();
+  }, [isRecruiter, navigate, userId, jobId]);
+
+  const filteredApplications = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) {
+      return applications;
+    }
+
+    return applications.filter(
+      (app) =>
+        app.candidate.full_name.toLowerCase().includes(query) ||
+        app.candidate.email.toLowerCase().includes(query) ||
+        app.candidate.location.toLowerCase().includes(query),
+    );
+  }, [applications, searchQuery]);
+
+  const totalPages = Math.ceil(filteredApplications.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedApplications = filteredApplications.slice(
+    startIndex,
+    endIndex,
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  const handleViewCV = async (fileUrl: string) => {
+    try {
+      window.open(fileUrl, "_blank");
+    } catch (err) {
+      console.error("View CV error:", err);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <main className="w-full max-w-360 mx-auto px-12 py-12 selection:bg-primary-container selection:text-on-primary">
+        <div className="text-center py-12">
+          <p className="text-secondary">Loading applications...</p>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main className="w-full max-w-360 mx-auto px-12 py-12 selection:bg-primary-container selection:text-on-primary">
-      {/* Header Section  */}
-      <header className="mb-12">
-        <a
-          className="inline-flex items-center text-secondary text-sm font-medium mb-4 hover:text-primary transition-colors"
-          href="#"
-        >
-          <span className="material-symbols-outlined mr-1 text-sm">
-            arrow_back
-          </span>
-          Back to Jobs
-        </a>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-          <div className="w-full">
-            <h1 className="text-4xl font-extrabold text-primary tracking-tight mb-2">
-              Senior Frontend Architect
-            </h1>
-            <div className="flex items-center gap-4 text-secondary mb-6">
-              <span className="flex items-center gap-1">
-                <span className="material-symbols-outlined text-base">
-                  location_on
-                </span>{" "}
-                San Francisco, CA (Remote)
-              </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-outline-variant/30"></span>
-              <span className="flex items-center gap-1">
-                <span className="material-symbols-outlined text-base">
-                  schedule
-                </span>{" "}
-                Posted Oct 01, 2023
-              </span>
-            </div>
-            <div className="mt-8 border-t border-outline-variant/20 pt-8">
-              <div className="flex flex-col">
-                <span className="text-sm font-bold uppercase tracking-[0.2em] text-secondary mb-1">
-                  Total Applicants
+    <>
+      <main className="w-full max-w-360 mx-auto px-12 py-12 selection:bg-primary-container selection:text-on-primary">
+        <header className="mb-12">
+          <button
+            onClick={() => navigate("/job-management")}
+            className="inline-flex items-center text-secondary text-sm font-medium mb-4 hover:text-primary transition-colors cursor-pointer"
+          >
+            <span className="material-symbols-outlined mr-1 text-sm">
+              arrow_back
+            </span>
+            Back to Jobs
+          </button>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+            <div className="w-full">
+              <h1 className="text-4xl font-extrabold text-primary tracking-tight mb-2">
+                {job?.title || "Job Applications"}
+              </h1>
+              <div className="flex items-center gap-4 text-secondary mb-6">
+                <span className="flex items-center gap-1">
+                  <span className="material-symbols-outlined text-base">
+                    schedule
+                  </span>
+                  Posted {job ? formatDate(job.created_at) : "N/A"}
                 </span>
-                <span className="text-5xl md:text-6xl font-extrabold text-primary tracking-tight">
-                  124
-                </span>
+              </div>
+              <div className="mt-8 border-t border-outline-variant/20 pt-8">
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold uppercase tracking-[0.2em] text-secondary mb-1">
+                    Total Applicants
+                  </span>
+                  <span className="text-5xl md:text-6xl font-extrabold text-primary tracking-tight">
+                    {applications.length}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </header>
-      {/* Search and Filters  */}
-      <section className="mb-8 flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative w-full md:w-96 group">
-          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">
-            search
-          </span>
-          <input
-            className="w-full pl-12 pr-4 py-3 bg-surface-container-highest border-none rounded-xl focus:ring-2 focus:ring-primary-fixed focus:bg-surface-container-lowest transition-all placeholder:text-outline/70"
-            placeholder="Search candidates by name or skill..."
-            type="text"
-          />
-        </div>
-      </section>
-      {/* Applicants Table Container  */}
-      <div className="bg-surface-container-lowest rounded-xl overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-surface-container-low text-secondary">
-              <th className="px-8 py-5 font-bold text-[0.7rem] uppercase tracking-wider">
-                Candidate
-              </th>
-              <th className="px-6 py-5 font-bold text-[0.7rem] uppercase tracking-wider">
-                Applied Date
-              </th>
-              <th className="px-6 py-5 font-bold text-[0.7rem] uppercase tracking-wider">
-                AI Match Score
-              </th>
-              <th className="px-6 py-5 font-bold text-[0.7rem] uppercase tracking-wider">
-                Email Address
-              </th>
-              <th className="px-6 py-5 font-bold text-[0.7rem] uppercase tracking-wider">
-                CV
-              </th>
-              <th className="px-8 py-5 font-bold text-[0.7rem] uppercase tracking-wider text-right"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-surface-container-low">
-            {/* Row 1  */}
-            <tr className="hover:bg-surface-container/30 transition-colors group">
-              <td className="px-8 py-6">
-                <div className="flex items-center gap-4">
-                  <img
-                    className="w-12 h-12 rounded-full object-cover"
-                    data-alt="Professional headshot of a male software engineer with glasses in a soft lit studio background"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDoJ53_lfAkvhgB9pJ-HvYG4owUWBGORhYi07XyFBlQ-DGC39MceZ2bj2un7HCbMMsdBI89SF2po8xeX25UiFV38qX664yMWAygyOe20dZ9bHUzZHi9m1ZOY_DeFD40S-F4SxwgepHcKD8OaTtbVAm6ulaPp6OF7HMCQRCYDTnQNTlQ2fFppmZxS8TqMZDaL3Hqt42mw6Vg9Wa0EE3rf29rtSO5Uc7kLClYFdO-w-JKn--8hBPGajftDKLSXtjcwIVBcXVoT6cQMNc"
-                  />
-                  <div>
-                    <p className="font-bold text-primary group-hover:text-primary-container transition-colors">
-                      Marcus Henderson
-                    </p>
-                    <p className="text-sm text-secondary">Berlin, Germany</p>
-                  </div>
-                </div>
-              </td>
-              <td className="px-6 py-6 text-sm text-secondary">Oct 12, 2023</td>
-              <td className="px-6 py-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-24 h-2 bg-surface-container rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary"
-                      style={{ width: "98%" }}
-                    ></div>
-                  </div>
-                  <span className="text-sm font-extrabold text-primary">
-                    98%
-                  </span>
-                </div>
-              </td>
-              <td className="px-6 py-6 text-sm text-secondary font-medium">
-                m.henderson@email.com
-              </td>
-              <td className="px-6 py-6">
-                <button className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-high text-secondary hover:text-primary hover:bg-surface-container-highest transition-colors text-[0.7rem] font-bold uppercase tracking-wider">
-                  <span className="material-symbols-outlined text-sm">
-                    description
-                  </span>
-                  View CV
-                </button>
-              </td>
-              <td className="px-8 py-6 text-right">
-                <div className="flex justify-end gap-3 text-secondary">
-                  <button
-                    className="p-2 hover:bg-surface-container-high rounded-lg transition-colors text-secondary"
-                    title="View Details"
-                  >
-                    <span className="material-symbols-outlined">
-                      chevron_right
-                    </span>
-                  </button>
-                </div>
-              </td>
-            </tr>
-            {/* Row 2  */}
-            <tr className="hover:bg-surface-container/30 transition-colors group">
-              <td className="px-8 py-6">
-                <div className="flex items-center gap-4">
-                  <img
-                    className="w-12 h-12 rounded-full object-cover"
-                    data-alt="Portrait of a female professional smiling warmly, creative office environment background with bokeh"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3FtQNfk95TZldc9BOnc3RmY5nziTx2Nc7rOV4UT9tkBwr-cxF1OjbCC5nTZ5LBleQMF8pWii57h0GCAW_y2C30xuJI6U9HF2G_BLqd0yzgG1tA8-W5hULI7yFtQvxMwNgSbX6EnxM57qQLKVUajw9EVobiF_egJy91-D08kXvWRDaAoYJ26RUTFB-qBRSdpjRbqMQ-TqJv3OGXn6uOZE54QvQFPj8qwmpeiGIi8TRXrfdcUic61cWst-8-KcxI0391tmJTZAFVZ0"
-                  />
-                  <div>
-                    <p className="font-bold text-primary group-hover:text-primary-container transition-colors">
-                      Elena Rodriguez
-                    </p>
-                    <p className="text-sm text-secondary">Austin, TX</p>
-                  </div>
-                </div>
-              </td>
-              <td className="px-6 py-6 text-sm text-secondary">Oct 10, 2023</td>
-              <td className="px-6 py-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-24 h-2 bg-surface-container rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary"
-                      style={{ width: "85%" }}
-                    ></div>
-                  </div>
-                  <span className="text-sm font-extrabold text-primary">
-                    85%
-                  </span>
-                </div>
-              </td>
-              <td className="px-6 py-6 text-sm text-secondary font-medium">
-                e.rodriguez@email.com
-              </td>
-              <td className="px-6 py-6">
-                <button className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-high text-secondary hover:text-primary hover:bg-surface-container-highest transition-colors text-[0.7rem] font-bold uppercase tracking-wider">
-                  <span className="material-symbols-outlined text-sm">
-                    description
-                  </span>
-                  View CV
-                </button>
-              </td>
-              <td className="px-8 py-6 text-right">
-                <div className="flex justify-end gap-3 text-secondary">
-                  <button
-                    className="p-2 hover:bg-surface-container-high rounded-lg transition-colors text-secondary"
-                    title="View Details"
-                  >
-                    <span className="material-symbols-outlined">
-                      chevron_right
-                    </span>
-                  </button>
-                </div>
-              </td>
-            </tr>
-            {/* Row 3  */}
-            <tr className="hover:bg-surface-container/30 transition-colors group">
-              <td className="px-8 py-6">
-                <div className="flex items-center gap-4">
-                  <img
-                    className="w-12 h-12 rounded-full object-cover"
-                    data-alt="Man with beard and friendly expression, minimalist neutral studio background, high-end corporate photography"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDY7Y16-L_MAqnnTmnDansocHX4mZrB0YZhZkPXosSqf9LbdjI-YNhe_trXG8i4IkFVDCrYNBzCy2sSNpC5KtafGT42duh0Wac-Y9coau07Fbk0rXAMMIKNyMxqiNLU7I54Q5OH-PT3SSIvnEwz52VWqaPkMyJ0Epfxf1x9c1FmqrCzkd3gc-ONxjvTHnBOnwq8uD99ZqrihRGQHvW47txZbSrgGG8QfKh0404I2aDZaDUpu_9ELcLv8Zae5GQCkqhrteRCgZfuAXc"
-                  />
-                  <div>
-                    <p className="font-bold text-primary group-hover:text-primary-container transition-colors">
-                      David Chen
-                    </p>
-                    <p className="text-sm text-secondary">Vancouver, BC</p>
-                  </div>
-                </div>
-              </td>
-              <td className="px-6 py-6 text-sm text-secondary">Oct 09, 2023</td>
-              <td className="px-6 py-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-24 h-2 bg-surface-container rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary/40"
-                      style={{ width: "72%" }}
-                    ></div>
-                  </div>
-                  <span className="text-sm font-extrabold text-secondary">
-                    72%
-                  </span>
-                </div>
-              </td>
-              <td className="px-6 py-6 text-sm text-secondary font-medium">
-                d.chen@email.com
-              </td>
-              <td className="px-6 py-6">
-                <button className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-high text-secondary hover:text-primary hover:bg-surface-container-highest transition-colors text-[0.7rem] font-bold uppercase tracking-wider">
-                  <span className="material-symbols-outlined text-sm">
-                    description
-                  </span>
-                  View CV
-                </button>
-              </td>
-              <td className="px-8 py-6 text-right">
-                <div className="flex justify-end gap-3 text-secondary">
-                  <button
-                    className="p-2 hover:bg-surface-container-high rounded-lg transition-colors text-secondary"
-                    title="View Details"
-                  >
-                    <span className="material-symbols-outlined">
-                      chevron_right
-                    </span>
-                  </button>
-                </div>
-              </td>
-            </tr>
-            {/* Row 4  */}
-            <tr className="hover:bg-surface-container/30 transition-colors group">
-              <td className="px-8 py-6">
-                <div className="flex items-center gap-4">
-                  <img
-                    className="w-12 h-12 rounded-full object-cover"
-                    data-alt="Confident young professional woman in business casual attire against a soft-focus urban workspace background"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBORv8-Ve_LiFp2M8DAoSKsqwcGVrgFptVrkIXes7kOITQMRJpwejdzCgfePNCDoAQ_yfQ_oSqjyBsfNNsuE8IFb-qeOiw96s5l4nFhMo4pkugaDkRmMt6N3fPc9PUFJ9beKX2iNOnYsof0zggScn2DYyo5h-QkdLET8_ks9-Zg5YfJpSc0D9AvYrdnZ1dHIFAqswa-O0cyreL3B_bwah38JUZiLFGASlSOoCF0MS3GqFOTrELrOygAMMAsneTYLHC44uAKVIybx20"
-                  />
-                  <div>
-                    <p className="font-bold text-primary group-hover:text-primary-container transition-colors">
-                      Sarah Jenkins
-                    </p>
-                    <p className="text-sm text-secondary">London, UK</p>
-                  </div>
-                </div>
-              </td>
-              <td className="px-6 py-6 text-sm text-secondary">Oct 08, 2023</td>
-              <td className="px-6 py-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-24 h-2 bg-surface-container rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-error/30"
-                      style={{ width: "45%" }}
-                    ></div>
-                  </div>
-                  <span className="text-sm font-extrabold text-secondary">
-                    45%
-                  </span>
-                </div>
-              </td>
-              <td className="px-6 py-6 text-sm text-secondary font-medium">
-                s.jenkins@email.com
-              </td>
-              <td className="px-6 py-6">
-                <button className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-high text-secondary hover:text-primary hover:bg-surface-container-highest transition-colors text-[0.7rem] font-bold uppercase tracking-wider">
-                  <span className="material-symbols-outlined text-sm">
-                    description
-                  </span>
-                  View CV
-                </button>
-              </td>
-              <td className="px-8 py-6 text-right">
-                <div className="flex justify-end gap-3 text-secondary">
-                  <button
-                    className="p-2 hover:bg-surface-container-high rounded-lg transition-colors text-secondary"
-                    title="View Details"
-                  >
-                    <span className="material-symbols-outlined">
-                      chevron_right
-                    </span>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        {/* Pagination Section  */}
-        <div className="px-8 py-6 bg-surface-container-low flex items-center justify-between border-t border-outline-variant/15">
-          <p className="text-sm text-secondary">
-            Showing <span className="font-bold text-primary">1 - 10</span> of{" "}
-            <span className="font-bold text-primary">124</span> applicants
-          </p>
-          <div className="flex items-center gap-2">
-            <button className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-container-high text-secondary transition-colors">
-              <span className="material-symbols-outlined">chevron_left</span>
-            </button>
-            <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-primary text-on-primary font-bold transition-all shadow-sm">
-              1
-            </button>
-            <button className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-container-high text-secondary transition-colors">
-              2
-            </button>
-            <button className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-container-high text-secondary transition-colors">
-              3
-            </button>
-            <span className="px-2 text-secondary">...</span>
-            <button className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-container-high text-secondary transition-colors">
-              13
-            </button>
-            <button className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-container-high text-secondary transition-colors">
-              <span className="material-symbols-outlined">chevron_right</span>
-            </button>
+        </header>
+
+        {error && (
+          <div className="mb-8 p-4 bg-error-container text-error rounded-lg">
+            {error}
           </div>
+        )}
+
+        <section className="mb-8 flex flex-col md:flex-row gap-4 items-center">
+          <div className="relative w-full md:w-96 group">
+            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">
+              search
+            </span>
+            <input
+              className="w-full pl-12 pr-4 py-3 bg-surface-container-highest border-none rounded-xl focus:ring-2 focus:ring-primary-fixed focus:bg-surface-container-lowest transition-all placeholder:text-outline/70"
+              placeholder="Search candidates by name or email..."
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </section>
+
+        <div className="bg-surface-container-lowest rounded-xl overflow-hidden">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-surface-container-low text-secondary">
+                <th className="w-[30%] px-8 py-5 font-bold text-[0.7rem] uppercase tracking-wider">
+                  Candidate
+                </th>
+                <th className="w-[16%] px-6 py-5 font-bold text-[0.7rem] uppercase tracking-wider whitespace-nowrap">
+                  Applied Date
+                </th>
+                <th className="px-6 py-5 font-bold text-[0.7rem] uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-5 font-bold text-[0.7rem] uppercase tracking-wider">
+                  Email Address
+                </th>
+                <th className="w-24 px-4 py-5 font-bold text-[0.7rem] uppercase tracking-wider whitespace-nowrap">
+                  CV
+                </th>
+                <th className="px-8 py-5 font-bold text-[0.7rem] uppercase tracking-wider text-right"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-surface-container-low">
+              {paginatedApplications.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="px-8 py-8 text-center text-secondary text-sm"
+                  >
+                    {applications.length === 0
+                      ? "No applications yet"
+                      : "No results found"}
+                  </td>
+                </tr>
+              ) : (
+                paginatedApplications.map((application) => (
+                  <tr
+                    key={application.application_id}
+                    className="hover:bg-surface-container/30 transition-colors group"
+                  >
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-4">
+                        {application.candidate.avatar_url ? (
+                          <img
+                            className="w-12 h-12 rounded-full object-cover"
+                            src={application.candidate.avatar_url}
+                            alt={application.candidate.full_name}
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+                            <span className="material-symbols-outlined">
+                              person
+                            </span>
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-bold text-primary group-hover:text-primary-container transition-colors">
+                            {application.candidate.full_name}
+                          </p>
+                          <p className="text-sm text-secondary">
+                            {application.candidate.location}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-6 text-sm text-secondary">
+                      {formatDate(application.created_at)}
+                    </td>
+                    <td className="px-6 py-6">
+                      <span
+                        className={`${
+                          statusBadgeClasses[application.status] ||
+                          "bg-gray-100 text-gray-800"
+                        } px-3 py-1 rounded-full text-[0.65rem] font-bold uppercase tracking-wider flex items-center w-fit gap-1`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            statusDotClasses[application.status] ||
+                            "bg-gray-500"
+                          }`}
+                        ></span>
+                        {statusLabels[application.status] || application.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-6 text-sm text-secondary font-medium">
+                      {application.candidate.email}
+                    </td>
+                    <td className="w-24 px-4 py-6">
+                      <button
+                        onClick={() =>
+                          handleViewCV(application.resume.file_url)
+                        }
+                        className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg bg-surface-container-high text-secondary hover:text-primary hover:bg-surface-container-highest transition-colors text-[0.65rem] font-bold uppercase tracking-wider whitespace-nowrap"
+                      >
+                        <span className="material-symbols-outlined text-sm">
+                          description
+                        </span>
+                        CV
+                      </button>
+                    </td>
+                    <td className="px-8 py-6 text-right">
+                      <div className="flex justify-end gap-3 text-secondary">
+                        <button
+                          className="p-2 hover:bg-surface-container-high rounded-lg transition-colors text-secondary"
+                          title="View Details"
+                        >
+                          <span className="material-symbols-outlined">
+                            chevron_right
+                          </span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+
+          {applications.length > 0 && (
+            <div className="px-8 py-6 bg-surface-container-low flex items-center justify-between border-t border-outline-variant/15">
+              <p className="text-sm text-secondary">
+                Showing{" "}
+                <span className="font-bold text-primary">
+                  {startIndex + 1} -{" "}
+                  {Math.min(endIndex, filteredApplications.length)}
+                </span>{" "}
+                of{" "}
+                <span className="font-bold text-primary">
+                  {filteredApplications.length}
+                </span>{" "}
+                applicants
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={currentPage === 1}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-container-high text-secondary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <span className="material-symbols-outlined">
+                    chevron_left
+                  </span>
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-10 h-10 flex items-center justify-center rounded-xl font-bold transition-all text-xs ${
+                        currentPage === page
+                          ? "bg-primary text-on-primary shadow-sm"
+                          : "hover:bg-surface-container-high text-secondary"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ),
+                )}
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-container-high text-secondary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <span className="material-symbols-outlined">
+                    chevron_right
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 };
 

@@ -529,6 +529,79 @@ export const getCandidateApplyStatus = async (req: Request, res: Response) => {
   }
 };
 
+export const getJobApplications = async (req: Request, res: Response) => {
+  try {
+    await prisma.$connect();
+
+    const jobId = parseJobId(req.params.jobId);
+    if (!jobId) {
+      res.status(400).json({ message: "Invalid job id" });
+      return;
+    }
+
+    const job = await prisma.job.findUnique({
+      where: { job_id: jobId },
+      select: { job_id: true, title: true, created_at: true },
+    });
+
+    if (!job) {
+      res.status(404).json({ message: "Job not found" });
+      return;
+    }
+
+    const applications = await prisma.application.findMany({
+      where: { job_id: jobId },
+      include: {
+        candidate: {
+          include: {
+            city: true,
+            user: true,
+          },
+        },
+        resume: true,
+      },
+      orderBy: { created_at: "desc" },
+    });
+
+    const applicationsWithAvatars = await Promise.all(
+      applications.map(async (application) => ({
+        application_id: application.application_id,
+        status: application.status,
+        created_at: application.created_at,
+        candidate: {
+          candidate_id: application.candidate.candidate_id,
+          full_name: application.candidate.full_name,
+          email: application.candidate.user?.email || "",
+          location: application.candidate.city?.name || "N/A",
+          avatar_url: application.candidate.avatar_url,
+        },
+        resume: {
+          resume_id: application.resume.resume_id,
+          name: application.resume.name,
+          file_url: application.resume.file_url,
+        },
+      })),
+    );
+
+    res.status(200).json({
+      job: {
+        job_id: job.job_id,
+        title: job.title,
+        created_at: job.created_at,
+      },
+      applications: applicationsWithAvatars,
+      total: applicationsWithAvatars.length,
+    });
+  } catch (error) {
+    console.error("Get job applications error:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: errorMessage });
+  }
+};
+
 export const getRecruiterJobs = async (req: Request, res: Response) => {
   try {
     await prisma.$connect();

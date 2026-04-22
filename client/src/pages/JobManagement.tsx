@@ -305,9 +305,14 @@ const JobManagement = () => {
                         {formatDate(job.created_at)}
                       </td>
                       <td className="px-8 py-6 text-center">
-                        <span className="bg-primary-fixed text-on-primary-fixed-variant px-3 py-1 rounded-full text-xs font-bold">
+                        <button
+                          className="inline-block bg-primary-fixed text-on-primary-fixed-variant px-3 py-1 rounded-full text-xs font-bold hover:opacity-80 transition-opacity cursor-pointer"
+                          onClick={() =>
+                            navigate(`/application-management/${job.job_id}`)
+                          }
+                        >
                           {job.applicants_count}
-                        </span>
+                        </button>
                       </td>
                       <td className="px-8 py-6">
                         <span
