@@ -3,6 +3,7 @@ import { prisma } from "../lib/prisma";
 import { supabaseAdmin } from "../lib/supabaseAdmin";
 
 const AVATAR_BUCKET_NAME = "Avatar";
+const CV_BUCKET_NAME = "CV";
 
 const ROLE_RECRUITER = 2;
 
@@ -76,6 +77,34 @@ function normalizeSkillName(value: string): string {
     .replace(/[đĐ]/g, "d")
     .replace(/[^a-zA-Z0-9]/g, "")
     .toLowerCase();
+}
+
+function sanitizeFileName(fileName: string): string {
+  return fileName
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]/g, "_")
+    .replace(/_+/g, "_")
+    .slice(0, 120);
+}
+
+function hasMojibake(fileName: string): boolean {
+  return /Ã.|Â.|Ä.|áº|á»|â.|Ê.|Ô.|Õ./.test(fileName);
+}
+
+function decodeUploadedFileName(fileName: string): string {
+  const fallbackName = fileName.trim() || "resume";
+
+  if (!hasMojibake(fallbackName)) {
+    return fallbackName;
+  }
+
+  try {
+    const decodedName = Buffer.from(fallbackName, "latin1").toString("utf8");
+    return decodedName.includes("�") ? fallbackName : decodedName;
+  } catch {
+    return fallbackName;
+  }
 }
 
 const formatMillionVnd = (value: number) => {
@@ -275,6 +304,223 @@ export const getPublicJobById = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Get public job by id error:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: errorMessage });
+  }
+};
+
+export const applyToJob = async (req: Request, res: Response) => {
+  try {
+    await prisma.$connect();
+
+    const jobId = parseJobId(req.params.jobId);
+    if (!jobId) {
+      res.status(400).json({ message: "Invalid job id" });
+      return;
+    }
+
+    const userId = parsePositiveInteger(req.body.user_id);
+    if (!userId) {
+      res.status(400).json({ message: "Invalid user id" });
+      return;
+    }
+
+    const selectedResumeId = parseOptionalInteger(req.body.selected_resume_id);
+
+    const [job, candidate] = await Promise.all([
+      prisma.job.findUnique({
+        where: { job_id: jobId },
+        select: { job_id: true },
+      }),
+      prisma.candidate.findFirst({
+        where: { user_id: userId },
+        select: { candidate_id: true },
+      }),
+    ]);
+
+    if (!job) {
+      res.status(404).json({ message: "Job not found" });
+      return;
+    }
+
+    if (!candidate) {
+      res.status(403).json({ message: "Only candidates can apply" });
+      return;
+    }
+
+    const existingApplication = await prisma.application.findFirst({
+      where: {
+        job_id: jobId,
+        candidate_id: candidate.candidate_id,
+      },
+      select: { application_id: true },
+    });
+
+    if (existingApplication) {
+      res.status(409).json({ message: "You have already applied to this job" });
+      return;
+    }
+
+    let resumeIdToUse: number | null = null;
+
+    if (selectedResumeId) {
+      const selectedResume = await prisma.resume.findFirst({
+        where: {
+          resume_id: selectedResumeId,
+          candidate_id: candidate.candidate_id,
+        },
+        select: { resume_id: true },
+      });
+
+      if (!selectedResume) {
+        res.status(404).json({ message: "Selected CV not found" });
+        return;
+      }
+
+      resumeIdToUse = selectedResume.resume_id;
+    } else {
+      const file = req.file;
+      if (!file) {
+        res.status(400).json({
+          message: "Please upload a CV or choose a saved CV",
+        });
+        return;
+      }
+
+      const allowedMimeTypes = new Set([
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ]);
+
+      if (!allowedMimeTypes.has(file.mimetype)) {
+        res.status(400).json({
+          message: "Only PDF, DOC, or DOCX files are supported",
+        });
+        return;
+      }
+
+      const originalFileName = decodeUploadedFileName(file.originalname);
+      const extension = (() => {
+        const lower = originalFileName.toLowerCase();
+        if (lower.endsWith(".pdf")) return "pdf";
+        if (lower.endsWith(".docx")) return "docx";
+        if (lower.endsWith(".doc")) return "doc";
+        return file.mimetype === "application/pdf"
+          ? "pdf"
+          : file.mimetype.includes("wordprocessingml")
+            ? "docx"
+            : "doc";
+      })();
+
+      const baseName = sanitizeFileName(
+        originalFileName.replace(/\.[^.]+$/, ""),
+      );
+      const objectPath = `candidate-${candidate.candidate_id}/applications/${Date.now()}-${baseName || "resume"}.${extension}`;
+
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from(CV_BUCKET_NAME)
+        .upload(objectPath, file.buffer, {
+          contentType: file.mimetype,
+          upsert: false,
+        });
+
+      if (uploadError) {
+        res.status(500).json({ message: "Failed to upload CV" });
+        return;
+      }
+
+      const createdResume = await prisma.resume.create({
+        data: {
+          candidate_id: candidate.candidate_id,
+          name: originalFileName,
+          file_url: objectPath,
+          isProfile: false,
+        },
+        select: { resume_id: true },
+      });
+
+      resumeIdToUse = createdResume.resume_id;
+    }
+
+    if (!resumeIdToUse) {
+      res.status(400).json({ message: "Resume is required to apply" });
+      return;
+    }
+
+    const createdApplication = await prisma.application.create({
+      data: {
+        candidate_id: candidate.candidate_id,
+        job_id: jobId,
+        resume_id: resumeIdToUse,
+        status: "submitted",
+      },
+      select: {
+        application_id: true,
+        status: true,
+      },
+    });
+
+    res.status(201).json({
+      message: "Application submitted successfully",
+      application: createdApplication,
+    });
+  } catch (error) {
+    console.error("Apply to job error:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: errorMessage });
+  }
+};
+
+export const getCandidateApplyStatus = async (req: Request, res: Response) => {
+  try {
+    await prisma.$connect();
+
+    const jobId = parseJobId(req.params.jobId);
+    if (!jobId) {
+      res.status(400).json({ message: "Invalid job id" });
+      return;
+    }
+
+    const userId = parseUserId(req.params.userId);
+    if (!userId) {
+      res.status(400).json({ message: "Invalid user id" });
+      return;
+    }
+
+    const candidate = await prisma.candidate.findFirst({
+      where: { user_id: userId },
+      select: { candidate_id: true },
+    });
+
+    if (!candidate) {
+      res.status(404).json({ message: "Candidate not found" });
+      return;
+    }
+
+    const application = await prisma.application.findFirst({
+      where: {
+        job_id: jobId,
+        candidate_id: candidate.candidate_id,
+      },
+      select: {
+        application_id: true,
+        status: true,
+      },
+    });
+
+    res.status(200).json({
+      hasApplied: Boolean(application),
+      application,
+    });
+  } catch (error) {
+    console.error("Get candidate apply status error:", error);
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
     res

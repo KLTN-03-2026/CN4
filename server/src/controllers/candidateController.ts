@@ -158,6 +158,7 @@ export const getCandidateProfile = async (req: Request, res: Response) => {
       include: {
         city: true,
         resumes: {
+          where: { isProfile: true },
           orderBy: { uploaded_at: "desc" },
         },
         candidate_skills: {
@@ -495,6 +496,7 @@ export const uploadCandidateResume = async (req: Request, res: Response) => {
         candidate_id: candidate.candidate_id,
         name: originalFileName,
         file_url: objectPath,
+        isProfile: true,
       },
     });
 

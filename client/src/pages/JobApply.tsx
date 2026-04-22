@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-type JobApplyValues = {
+export type JobApplyValues = {
   fullName: string;
   email: string;
   phone: string;
@@ -20,7 +20,7 @@ type StoredUser = {
   user_id?: number;
 };
 
-type ResumeSelectionMode = "saved" | "upload";
+type ResumeSelectionMode = "loading" | "saved" | "upload";
 
 type JobApplyProps = {
   open: boolean;
@@ -62,10 +62,11 @@ const JobApply = ({
   const [values, setValues] = useState<JobApplyValues>(emptyValues);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
-  const [resumeMode, setResumeMode] = useState<ResumeSelectionMode>("upload");
+  const [resumeMode, setResumeMode] = useState<ResumeSelectionMode>("loading");
   const [savedResumes, setSavedResumes] = useState<CandidateResume[]>([]);
   const [isLoadingResumes, setIsLoadingResumes] = useState(false);
   const [resumeLoadError, setResumeLoadError] = useState("");
+  const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
     if (!open) {
@@ -94,10 +95,11 @@ const JobApply = ({
       setValues(emptyValues);
       setIsSubmitting(false);
       setIsOverlayVisible(false);
-      setResumeMode("upload");
+      setResumeMode("loading");
       setSavedResumes([]);
       setIsLoadingResumes(false);
       setResumeLoadError("");
+      setSubmitError("");
 
       const animationFrameId = window.requestAnimationFrame(() => {
         setIsOverlayVisible(true);
@@ -114,6 +116,8 @@ const JobApply = ({
 
     const rawUser = localStorage.getItem("user");
     if (!rawUser) {
+      setResumeMode("upload");
+      setIsLoadingResumes(false);
       return;
     }
 
@@ -130,6 +134,8 @@ const JobApply = ({
     }
 
     if (!userId) {
+      setResumeMode("upload");
+      setIsLoadingResumes(false);
       return;
     }
 
@@ -156,10 +162,10 @@ const JobApply = ({
           : [];
 
         setSavedResumes(resumes);
-        setResumeMode(resumes.length > 0 ? "saved" : "upload");
+        setResumeMode("upload");
         setValues((current) => ({
           ...current,
-          selectedResumeId: resumes[0]?.resume_id ?? null,
+          selectedResumeId: null,
           resumeFile: null,
         }));
       } catch (error) {
@@ -189,10 +195,15 @@ const JobApply = ({
       return;
     }
 
+    setSubmitError("");
     setIsSubmitting(true);
     try {
       await onSubmit?.(values);
       onClose();
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : "Failed to submit application",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -245,12 +256,18 @@ const JobApply = ({
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
+          {submitError && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {submitError}
+            </div>
+          )}
+
           <div className="space-y-2">
             <label className="text-[10px] font-bold tracking-widest uppercase text-secondary px-1">
               Full Name
             </label>
             <input
-              className="w-full rounded-xl bg-surface-container-highest px-4 py-3.5 outline-none focus:ring-2 focus:ring-primary-fixed"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-black focus:ring-0"
               type="text"
               value={values.fullName}
               onChange={(event) =>
@@ -270,7 +287,7 @@ const JobApply = ({
                 Email
               </label>
               <input
-                className="w-full rounded-xl bg-surface-container-highest px-4 py-3.5 outline-none focus:ring-2 focus:ring-primary-fixed"
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-black focus:ring-0"
                 type="email"
                 value={values.email}
                 onChange={(event) =>
@@ -289,7 +306,7 @@ const JobApply = ({
                 Phone
               </label>
               <input
-                className="w-full rounded-xl bg-surface-container-highest px-4 py-3.5 outline-none focus:ring-2 focus:ring-primary-fixed"
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-black focus:ring-0"
                 type="tel"
                 value={values.phone}
                 onChange={(event) =>
@@ -311,21 +328,6 @@ const JobApply = ({
               <button
                 type="button"
                 onClick={() => {
-                  setResumeMode("saved");
-                  setValues((current) => ({ ...current, resumeFile: null }));
-                }}
-                className={`rounded-xl px-4 py-2.5 text-sm transition-colors ${
-                  resumeMode === "saved"
-                    ? "bg-primary text-on-primary"
-                    : "bg-surface-container-low text-secondary hover:bg-surface-container"
-                }`}
-                disabled={savedResumes.length === 0}
-              >
-                Use saved CV
-              </button>
-              <button
-                type="button"
-                onClick={() => {
                   setResumeMode("upload");
                   setValues((current) => ({
                     ...current,
@@ -340,13 +342,28 @@ const JobApply = ({
               >
                 Upload new CV
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setResumeMode("saved");
+                  setValues((current) => ({ ...current, resumeFile: null }));
+                }}
+                className={`rounded-xl px-4 py-2.5 text-sm transition-colors ${
+                  resumeMode === "saved"
+                    ? "bg-primary text-on-primary"
+                    : "bg-surface-container-low text-secondary hover:bg-surface-container"
+                }`}
+                disabled={savedResumes.length === 0}
+              >
+                Use saved CV
+              </button>
             </div>
 
-            {isLoadingResumes && (
+            {isLoadingResumes || resumeMode === "loading" ? (
               <p className="text-xs text-secondary px-1">
                 Loading saved CVs...
               </p>
-            )}
+            ) : null}
 
             {!isLoadingResumes && resumeLoadError && (
               <p className="text-xs text-error px-1">{resumeLoadError}</p>
@@ -367,8 +384,8 @@ const JobApply = ({
                       }
                       className={`w-full rounded-xl border px-4 py-3 text-left transition-colors ${
                         values.selectedResumeId === resume.resume_id
-                          ? "border-primary bg-primary/5"
-                          : "border-outline-variant/30 bg-surface-container-low hover:border-primary/40"
+                          ? "border-black bg-white"
+                          : "border-gray-300 bg-white hover:border-black"
                       }`}
                     >
                       <p className="text-sm font-semibold text-primary truncate">
@@ -389,8 +406,8 @@ const JobApply = ({
             )}
 
             {resumeMode === "upload" && (
-              <label className="flex cursor-pointer items-center justify-between rounded-xl border border-dashed border-outline-variant/40 bg-surface-container-low px-4 py-3 hover:border-primary/40 transition-colors">
-                <span className="text-sm text-on-surface-variant truncate pr-3">
+              <label className="flex cursor-pointer items-center justify-between rounded-xl border border-dashed border-gray-300 bg-white px-4 py-3 transition-colors hover:border-black focus-within:border-black">
+                <span className="text-xs text-on-surface-variant truncate pr-3">
                   {values.resumeFile
                     ? values.resumeFile.name
                     : "Choose a file (PDF, DOC, DOCX)"}
@@ -420,7 +437,7 @@ const JobApply = ({
               Quick Introduction
             </label>
             <textarea
-              className="w-full rounded-xl bg-surface-container-highest px-4 py-3.5 outline-none focus:ring-2 focus:ring-primary-fixed resize-none"
+              className="w-full resize-none rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-black focus:ring-0"
               rows={4}
               value={values.introduction}
               onChange={(event) =>

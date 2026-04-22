@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import JobApply from "./JobApply";
+import type { JobApplyValues } from "./JobApply";
+import ToastNotifications from "../components/ToastNotifications";
 
 type JobDetailData = {
   job_id: number;
@@ -22,10 +24,34 @@ type JobDetailData = {
 };
 
 type StoredUser = {
+  user_id?: number;
   role?: {
     role_id?: number;
     title?: string;
   };
+};
+
+const getCandidateUserId = (): number | null => {
+  const rawUser = localStorage.getItem("user");
+  if (!rawUser) {
+    return null;
+  }
+
+  try {
+    const user = JSON.parse(rawUser) as StoredUser;
+    const isCandidate =
+      user?.role?.role_id === 1 ||
+      user?.role?.role_id === 3 ||
+      user?.role?.title?.toLowerCase() === "candidate";
+
+    if (!isCandidate || typeof user.user_id !== "number") {
+      return null;
+    }
+
+    return user.user_id;
+  } catch {
+    return null;
+  }
 };
 
 const sanitizeHtml = (value: string | null | undefined): string => {
@@ -109,31 +135,111 @@ const JobDetail = () => {
   const [error, setError] = useState("");
   const [isCompanyLogoBroken, setIsCompanyLogoBroken] = useState(false);
   const [isApplyOverlayOpen, setIsApplyOverlayOpen] = useState(false);
+  const [hasApplied, setHasApplied] = useState(false);
+  const [isCheckingApplyStatus, setIsCheckingApplyStatus] = useState(false);
+  const [applySuccessMessage, setApplySuccessMessage] = useState("");
 
   const handleApplyClick = () => {
-    const rawUser = localStorage.getItem("user");
+    const candidateUserId = getCandidateUserId();
 
-    if (!rawUser) {
+    if (!candidateUserId) {
       navigate("/candidate-login");
       return;
     }
 
-    try {
-      const user = JSON.parse(rawUser) as StoredUser;
-      const isCandidate =
-        user?.role?.role_id === 3 ||
-        user?.role?.title?.toLowerCase() === "candidate";
+    if (hasApplied) {
+      return;
+    }
 
-      if (!isCandidate) {
-        navigate("/candidate-login");
+    setIsApplyOverlayOpen(true);
+  };
+
+  const handleApplySubmit = async (values: JobApplyValues) => {
+    if (!jobId) {
+      throw new Error("Invalid job id");
+    }
+
+    const userId = getCandidateUserId();
+    if (!userId) {
+      navigate("/candidate-login");
+      throw new Error("Please log in before applying");
+    }
+
+    const formData = new FormData();
+    formData.append("user_id", String(userId));
+    formData.append("full_name", values.fullName);
+    formData.append("email", values.email);
+    formData.append("phone", values.phone);
+    formData.append("introduction", values.introduction);
+
+    if (values.selectedResumeId) {
+      formData.append("selected_resume_id", String(values.selectedResumeId));
+    }
+
+    if (values.resumeFile) {
+      formData.append("cv", values.resumeFile);
+    }
+
+    const response = await fetch(
+      `http://localhost:3000/api/jobs/${jobId}/apply`,
+      {
+        method: "POST",
+        body: formData,
+      },
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to submit application");
+    }
+
+    setHasApplied(true);
+    setApplySuccessMessage("Application submitted successfully.");
+  };
+
+  const handleDismissNotification = (id: string) => {
+    if (id === "apply-success") {
+      setApplySuccessMessage("");
+    }
+  };
+
+  useEffect(() => {
+    const checkApplyStatus = async () => {
+      if (!jobId) {
+        setHasApplied(false);
         return;
       }
 
-      setIsApplyOverlayOpen(true);
-    } catch {
-      navigate("/candidate-login");
-    }
-  };
+      const candidateUserId = getCandidateUserId();
+      if (!candidateUserId) {
+        setHasApplied(false);
+        return;
+      }
+
+      setIsCheckingApplyStatus(true);
+
+      try {
+        const response = await fetch(
+          `http://localhost:3000/api/jobs/${jobId}/apply-status/${candidateUserId}`,
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          setHasApplied(false);
+          return;
+        }
+
+        setHasApplied(Boolean(data.hasApplied));
+      } catch {
+        setHasApplied(false);
+      } finally {
+        setIsCheckingApplyStatus(false);
+      }
+    };
+
+    void checkApplyStatus();
+  }, [jobId]);
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -207,6 +313,22 @@ const JobDetail = () => {
         </div>
       ) : (
         <>
+          <ToastNotifications
+            notifications={
+              applySuccessMessage
+                ? [
+                    {
+                      id: "apply-success",
+                      message: applySuccessMessage,
+                      variant: "success",
+                    },
+                  ]
+                : []
+            }
+            onDismiss={handleDismissNotification}
+            autoHideMs={4000}
+          />
+
           <header className="mb-16 max-w-4xl">
             <div className="inline-flex items-center px-3 py-1 bg-secondary-fixed-dim text-on-secondary-fixed rounded-full text-[0.7rem] font-bold tracking-widest uppercase mb-6">
               {job.category}
@@ -296,20 +418,22 @@ const JobDetail = () => {
               </div>
 
               <button
-                className="w-full bg-primary text-on-primary py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all"
+                className="w-full bg-primary text-on-primary py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                 onClick={handleApplyClick}
+                disabled={hasApplied || isCheckingApplyStatus}
               >
-                Apply for this position
+                {hasApplied ? "Already Applied" : "Apply for this position"}
               </button>
             </section>
 
             <aside className="space-y-8">
               <div className="bg-surface-container-lowest p-8 shadow-[0_40px_60px_-5px_rgba(25,28,30,0.06)] border border-outline-variant/15">
                 <button
-                  className="w-full bg-primary text-on-primary py-4 rounded-xl font-bold text-lg mb-6 hover:opacity-90 transition-all"
+                  className="w-full bg-primary text-on-primary py-4 rounded-xl font-bold text-lg mb-6 hover:opacity-90 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                   onClick={handleApplyClick}
+                  disabled={hasApplied || isCheckingApplyStatus}
                 >
-                  Apply for this position
+                  {hasApplied ? "Already Applied" : "Apply for this position"}
                 </button>
                 <div className="space-y-6">
                   <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">
@@ -417,6 +541,7 @@ const JobDetail = () => {
             jobTitle={job.title}
             companyName={job.company_name}
             onClose={() => setIsApplyOverlayOpen(false)}
+            onSubmit={handleApplySubmit}
           />
         </>
       )}

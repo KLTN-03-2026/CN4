@@ -110,6 +110,7 @@ model Resume {
   name         String
   file_url     String
   uploaded_at  DateTime @default(now())
+  isProfile    Boolean  @default(false)
 
   candidate    Candidate     @relation(fields: [candidate_id], references: [candidate_id])
   applications Application[]
