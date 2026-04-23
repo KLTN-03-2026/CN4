@@ -306,34 +306,36 @@ const JobApply = ({
               <p className="text-xs text-error px-1">{resumeLoadError}</p>
             )}
 
-            {!isLoadingResumes && resumeMode === "saved" && savedResumes.length > 0 && (
-              <div className="space-y-2">
-                {savedResumes.map((resume) => (
-                  <button
-                    key={resume.resume_id}
-                    type="button"
-                    onClick={() =>
-                      setValues((current) => ({
-                        ...current,
-                        selectedResumeId: resume.resume_id,
-                      }))
-                    }
-                    className={`w-full rounded-xl border px-4 py-3 text-left transition-colors ${
-                      values.selectedResumeId === resume.resume_id
-                        ? "border-black bg-white"
-                        : "border-gray-300 bg-white hover:border-black"
-                    }`}
-                  >
-                    <p className="text-sm font-semibold text-primary truncate">
-                      {resume.name}
-                    </p>
-                    <p className="text-xs text-secondary mt-0.5">
-                      Uploaded {getResumeUploadedLabel(resume.uploaded_at)}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            )}
+            {!isLoadingResumes &&
+              resumeMode === "saved" &&
+              savedResumes.length > 0 && (
+                <div className="space-y-2">
+                  {savedResumes.map((resume) => (
+                    <button
+                      key={resume.resume_id}
+                      type="button"
+                      onClick={() =>
+                        setValues((current) => ({
+                          ...current,
+                          selectedResumeId: resume.resume_id,
+                        }))
+                      }
+                      className={`w-full rounded-xl border px-4 py-3 text-left transition-colors ${
+                        values.selectedResumeId === resume.resume_id
+                          ? "border-black bg-white"
+                          : "border-gray-300 bg-white hover:border-black"
+                      }`}
+                    >
+                      <p className="text-sm font-semibold text-primary truncate">
+                        {resume.name}
+                      </p>
+                      <p className="text-xs text-secondary mt-0.5">
+                        Uploaded {getResumeUploadedLabel(resume.uploaded_at)}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              )}
 
             {resumeMode === "upload" && (
               <label className="flex cursor-pointer items-center justify-between rounded-xl border border-dashed border-gray-300 bg-white px-4 py-3 transition-colors hover:border-black focus-within:border-black">
