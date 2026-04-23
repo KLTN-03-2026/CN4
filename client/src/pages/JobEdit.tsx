@@ -159,6 +159,7 @@ const JobEdit = () => {
     categoryId: "",
     description: "",
     requirements: "",
+    experienceYears: "",
     salaryMin: "",
     salaryMax: "",
     benefits: "",
@@ -219,6 +220,10 @@ const JobEdit = () => {
           categoryId: String(job.category_id || ""),
           description: job.description || "",
           requirements: job.requirements || "",
+          experienceYears:
+            job.experience_years === null || job.experience_years === undefined
+              ? ""
+              : String(job.experience_years),
           salaryMin: job.salary_min ? String(job.salary_min) : "",
           salaryMax: job.salary_max ? String(job.salary_max) : "",
           benefits: job.benefits || "",
@@ -417,6 +422,16 @@ const JobEdit = () => {
 
     const salaryMin = formData.salaryMin ? Number(formData.salaryMin) : null;
     const salaryMax = formData.salaryMax ? Number(formData.salaryMax) : null;
+    const experienceYears =
+      formData.experienceYears === "" ? null : Number(formData.experienceYears);
+
+    if (
+      experienceYears !== null &&
+      (!Number.isInteger(experienceYears) || experienceYears < 0)
+    ) {
+      setError("Experience years must be a non-negative integer.");
+      return;
+    }
 
     if (
       salaryMin !== null &&
@@ -444,6 +459,7 @@ const JobEdit = () => {
             category_id: Number(formData.categoryId),
             description: normalizeEditorHtmlForStorage(formData.description),
             requirements: normalizeEditorHtmlForStorage(formData.requirements),
+            experience_years: experienceYears,
             salary_min: salaryMin,
             salary_max: salaryMax,
             benefits: normalizeEditorHtmlForStorage(formData.benefits),
@@ -676,6 +692,26 @@ const JobEdit = () => {
                   />
                 </div>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-[10px] uppercase font-bold tracking-widest text-on-surface-variant">
+                Years of Experience
+              </label>
+              <input
+                className="w-full bg-white border border-gray-300 rounded-xl px-5 py-4 outline-none focus:border-black transition-all text-on-surface"
+                name="experienceYears"
+                type="text"
+                inputMode="numeric"
+                placeholder="e.g. 2"
+                value={formData.experienceYears}
+                onChange={(event) =>
+                  setFormData((current) => ({
+                    ...current,
+                    experienceYears: normalizeNumericInput(event.target.value),
+                  }))
+                }
+              />
             </div>
 
             <div className="space-y-2">

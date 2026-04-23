@@ -48,6 +48,25 @@ function parseOptionalInteger(value: unknown): number | null {
   return parsePositiveInteger(value);
 }
 
+function parseOptionalNonNegativeInteger(value: unknown): number | null {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  if (typeof value === "number" && Number.isInteger(value) && value >= 0) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsedValue = Number(value);
+    if (Number.isInteger(parsedValue) && parsedValue >= 0) {
+      return parsedValue;
+    }
+  }
+
+  return null;
+}
+
 function parseDateOnly(value: string): Date | null {
   const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!match) {
@@ -224,6 +243,7 @@ export const getPublicJobs = async (_req: Request, res: Response) => {
           job.company.avatar_url,
           job.company.updated_at,
         ),
+        experience_years: job.experience_years,
         category: job.category?.title ?? "General",
         location: job.company.city?.name || job.company.address || "Remote",
         created_at: job.created_at,
@@ -295,6 +315,7 @@ export const getPublicJobById = async (req: Request, res: Response) => {
         location: job.company.city?.name || job.company.address || "Remote",
         created_at: job.created_at,
         expiration_date: job.expiration_date,
+        experience_years: job.experience_years,
         salary_label: formatSalaryLabel(job.salary_min, job.salary_max),
         description: job.description,
         requirements: job.requirements,
@@ -714,6 +735,9 @@ export const createRecruiterJob = async (req: Request, res: Response) => {
         : null;
     const benefits =
       typeof req.body.benefits === "string" ? req.body.benefits.trim() : null;
+    const experienceYears = parseOptionalNonNegativeInteger(
+      req.body.experience_years,
+    );
     const categoryId = parsePositiveInteger(req.body.category_id);
     const salaryMin = parseOptionalInteger(req.body.salary_min);
     const salaryMax = parseOptionalInteger(req.body.salary_max);
@@ -734,6 +758,16 @@ export const createRecruiterJob = async (req: Request, res: Response) => {
 
     if (!categoryId) {
       res.status(400).json({ message: "Job category is required" });
+      return;
+    }
+
+    if (
+      req.body.experience_years !== undefined &&
+      parseOptionalNonNegativeInteger(req.body.experience_years) === null
+    ) {
+      res
+        .status(400)
+        .json({ message: "Experience years must be a non-negative integer" });
       return;
     }
 
@@ -793,6 +827,7 @@ export const createRecruiterJob = async (req: Request, res: Response) => {
           title,
           description,
           requirements,
+          experience_years: experienceYears,
           salary_min: salaryMin,
           salary_max: salaryMax,
           benefits,
@@ -976,6 +1011,7 @@ export const getRecruiterJobById = async (req: Request, res: Response) => {
         title: job.title,
         description: job.description,
         requirements: job.requirements,
+        experience_years: job.experience_years,
         salary_min: job.salary_min,
         salary_max: job.salary_max,
         benefits: job.benefits,
@@ -1056,6 +1092,9 @@ export const updateRecruiterJob = async (req: Request, res: Response) => {
         : null;
     const benefits =
       typeof req.body.benefits === "string" ? req.body.benefits.trim() : null;
+    const experienceYears = parseOptionalNonNegativeInteger(
+      req.body.experience_years,
+    );
     const categoryId = parsePositiveInteger(req.body.category_id);
     const salaryMin = parseOptionalInteger(req.body.salary_min);
     const salaryMax = parseOptionalInteger(req.body.salary_max);
@@ -1076,6 +1115,16 @@ export const updateRecruiterJob = async (req: Request, res: Response) => {
 
     if (!categoryId) {
       res.status(400).json({ message: "Job category is required" });
+      return;
+    }
+
+    if (
+      req.body.experience_years !== undefined &&
+      parseOptionalNonNegativeInteger(req.body.experience_years) === null
+    ) {
+      res
+        .status(400)
+        .json({ message: "Experience years must be a non-negative integer" });
       return;
     }
 
@@ -1136,6 +1185,7 @@ export const updateRecruiterJob = async (req: Request, res: Response) => {
           title,
           description,
           requirements,
+          experience_years: experienceYears,
           salary_min: salaryMin,
           salary_max: salaryMax,
           benefits,

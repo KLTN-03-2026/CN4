@@ -139,6 +139,7 @@ const JobPost = () => {
     categoryId: "",
     description: "",
     requirements: "",
+    experienceYears: "",
     salaryMin: "",
     salaryMax: "",
     benefits: "",
@@ -354,6 +355,16 @@ const JobPost = () => {
 
     const salaryMin = formData.salaryMin ? Number(formData.salaryMin) : null;
     const salaryMax = formData.salaryMax ? Number(formData.salaryMax) : null;
+    const experienceYears =
+      formData.experienceYears === "" ? null : Number(formData.experienceYears);
+
+    if (
+      experienceYears !== null &&
+      (!Number.isInteger(experienceYears) || experienceYears < 0)
+    ) {
+      setError("Experience years must be a non-negative integer.");
+      return;
+    }
 
     if (
       salaryMin !== null &&
@@ -381,6 +392,7 @@ const JobPost = () => {
             category_id: Number(formData.categoryId),
             description: normalizeEditorHtmlForStorage(formData.description),
             requirements: normalizeEditorHtmlForStorage(formData.requirements),
+            experience_years: experienceYears,
             salary_min: salaryMin,
             salary_max: salaryMax,
             benefits: normalizeEditorHtmlForStorage(formData.benefits),
@@ -614,6 +626,25 @@ const JobPost = () => {
                 />
               </div>
             </div>
+          </div>
+          <div className="space-y-2">
+            <label className="block text-[10px] uppercase font-bold tracking-widest text-on-surface-variant">
+              Years of Experience
+            </label>
+            <input
+              className="w-full bg-white border border-gray-300 rounded-xl px-5 py-4 outline-none focus:border-black transition-all text-on-surface"
+              name="experienceYears"
+              type="text"
+              inputMode="numeric"
+              placeholder="e.g. 2"
+              value={formData.experienceYears}
+              onChange={(event) =>
+                setFormData((current) => ({
+                  ...current,
+                  experienceYears: normalizeNumericInput(event.target.value),
+                }))
+              }
+            />
           </div>
           {/* Expiration Date  */}
           <div className="space-y-2">

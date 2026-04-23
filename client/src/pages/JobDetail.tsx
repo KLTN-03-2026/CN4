@@ -16,6 +16,7 @@ type JobDetailData = {
   location: string;
   created_at: string;
   expiration_date: string | null;
+  experience_years: number | null;
   salary_label: string;
   description: string | null;
   requirements: string | null;
@@ -124,6 +125,18 @@ const getExpireLabel = (expirationDate: string | null) => {
     month: "2-digit",
     year: "numeric",
   });
+};
+
+const getExperienceLabel = (experienceYears: number | null) => {
+  if (experienceYears === null || experienceYears === undefined) {
+    return "Not required";
+  }
+
+  if (experienceYears === 0) {
+    return "Entry level";
+  }
+
+  return `${experienceYears} year${experienceYears > 1 ? "s" : ""}`;
 };
 
 const JobDetail = () => {
@@ -447,6 +460,14 @@ const JobDetail = () => {
                     </span>
                     <span className="text-primary font-bold">
                       {job.location}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">
+                    <span className="text-secondary text-sm font-medium">
+                      Experience
+                    </span>
+                    <span className="text-primary font-bold">
+                      {getExperienceLabel(job.experience_years)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">

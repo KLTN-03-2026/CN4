@@ -6,6 +6,7 @@ type PublicJob = {
   title: string;
   company_name: string;
   company_avatar_url: string | null;
+  experience_years: number | null;
   category: string;
   location: string;
   created_at: string;
@@ -33,6 +34,18 @@ const getPostedLabel = (createdAt: string) => {
 
   const diffMonths = Math.floor(diffDays / 30);
   return `Posted ${diffMonths} month${diffMonths > 1 ? "s" : ""} ago`;
+};
+
+const getExperienceLabel = (experienceYears: number | null) => {
+  if (experienceYears === null || experienceYears === undefined) {
+    return "No experience requirement";
+  }
+
+  if (experienceYears === 0) {
+    return "Entry level";
+  }
+
+  return `${experienceYears} year${experienceYears > 1 ? "s" : ""} experience`;
 };
 
 const JobListing = () => {
@@ -183,11 +196,6 @@ const JobListing = () => {
           </div>
         ) : (
           paginatedJobs.map((job) => {
-            const primarySkill = job.skills[0] || job.category;
-            const secondarySkill = job.skills[1] || job.location;
-            const tertiarySkill = job.skills[2] || "Professional";
-            const moreCount = Math.max(0, job.skills.length - 3);
-
             return (
               <div
                 key={job.job_id}
@@ -234,16 +242,10 @@ const JobListing = () => {
                 </div>
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
-                    <span>{primarySkill}</span>
-                    <span className="text-slate-300">|</span>
-                    <span>{secondarySkill}</span>
-                    <span className="text-slate-300">|</span>
-                    <span>{tertiarySkill}</span>
-                    {moreCount > 0 && (
-                      <span className="text-surface-tint ml-1">
-                        +{moreCount}
-                      </span>
-                    )}
+                    <span className="material-symbols-outlined text-base text-slate-400">
+                      workspace_premium
+                    </span>
+                    <span>{getExperienceLabel(job.experience_years)}</span>
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-xs font-medium text-slate-400 uppercase">
